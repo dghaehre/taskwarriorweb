@@ -127,6 +127,6 @@
 # Server
 (defn main [& args]
   (let [port (get args 1 (os/getenv "PORT" "9001"))
-        host (get args 2 "localhost")]
+        host (get args 2 (os/getenv "HOST" "localhost"))]
     (print "Starting server on " host ":" port)
     (server app port host)))
