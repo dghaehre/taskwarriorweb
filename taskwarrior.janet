@@ -9,7 +9,8 @@
   result)
 
 (defmacro git [& args]
-  ~($< git --git-dir /home/dghaehre/.task/.git ,;args))
+  (let [git-dir (string (os/getenv "HOME") "/.task/.git")]
+    ~($< git --git-dir ,git-dir ,;args)))
 
 (defn get-today []
   (let [output ($< task scheduled.before:eod export ready)
