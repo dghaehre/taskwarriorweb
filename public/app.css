@@ -9,3 +9,7 @@ html, body {
 code, .code {
   font-family: Consolas, monaco, monospace;
 }
+
+.htmx-request .hide-in-flight{
+  display: none;
+}

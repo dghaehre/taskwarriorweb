@@ -24,7 +24,8 @@
 # Routes
 (route :get "/" :home)
 (route :get "/git-status" :git-status)
-(route :get "/git-pull" :git-pull)
+(route :post "/git-pull" :git-pull)
+(route :post "/git-push" :git-push)
 
 (defn to-list [items]
   (map (fn [item]
@@ -100,29 +101,19 @@
         [:p (string "showing " (length today) " tasks")]]]))
         
 (defn git-status [request]
-  (let [{:remote? r
-         :local? l} (git/get-status)]
-    (cond
-      (and (not r) (not l)) [:span {:style "color: green"} "🟢"]
-      (and r l) [:span "💀"]
-      (and r (not l)) [:span
-                        [:span {:style "float: right;"} "🟠"]
-                        [:br]
-                        [:a {:href "/git-pull"} "Pull changes"]]
-      (and (not r) l) [:span
-                        [:span {:style "float: right;"} "🟡"]
-                        [:br]
-                        [:a {:href "/git-pull"} "Push changes"]]
-      [:span "🤷"])))
+  (-> (git/get-status) (git/show-status)))
 
 (defn git-pull [request]
   (git/show-status {:remote? false :local? false}))
 
+(defn git-push [request]
+  (let [[success value] (-> (git/push-changes) (protect)) # What should we do with the a failed value?
+        status (git/get-status)]
+    (git/show-status status)))
 
 # Middleware
 (def app (-> (handler)
              (layout app-layout)
-             (with-csrf-token)
              (with-session)
              (extra-methods)
              (query-string)
