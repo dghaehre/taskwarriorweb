@@ -8,11 +8,12 @@
     (set (result (keyword key)) value))
   result)
 
-(defmacro git [& args]
-  (let [git-dir (string (os/getenv "HOME") "/.task/.git")]
-    ~($< git --git-dir ,git-dir ,;args)))
-
 (defn get-today []
   (let [output ($< task scheduled.before:eod export ready)
+        json (json/decode output)]
+    (map keyword-keys json)))
+
+(defn get-inbox []
+  (let [output ($< task status:pending rc.context=none pro: export)
         json (json/decode output)]
     (map keyword-keys json)))

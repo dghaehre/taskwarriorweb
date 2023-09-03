@@ -1,21 +1,29 @@
 (use sh)
 (use judge)
 
-# TODO: doesnt work as intended
+(def git-dir (string (os/getenv "HOME") "/.task"))
+
 (defmacro git [& args]
-  (let [git-dir (string (os/getenv "HOME") "/.task/.git")]
-    ~($< git -C ,git-dir --git-dir ,git-dir ,;args)))
+  ~($< git -C ,git-dir ,;args))
 
 (defn get-branch []
   (-> (git rev-parse --abbrev-ref HEAD)
       (string/trim)))
 
-# TODO: doesnt work as intended
 (defn push-changes []
   (let [branch (get-branch)]
-    (git add .)
+    (git add ,git-dir)
     (git commit -m "update from taskwarriorweb")
     (git push origin ,branch)))
+
+(defn pull-changes []
+  (let [branch (get-branch)]
+    (git pull origin ,branch)))
+
+(defn force-pull-changes []
+  (let [branch (get-branch)]
+    (git reset --hard HEAD) # Reset everything
+    (git pull origin ,branch)))
 
 (defn get-status []
   (let [branch (get-branch)
@@ -31,12 +39,12 @@
                       (string/find "Your branch is behind")
                       (nil?)
                       (not)))]
-    {:remote? remote # Do we have remote changes
-     :local? local # Do we have local changes
+    {:remote-changes? remote # Do we have remote changes
+     :local-changes? local # Do we have local changes
      :branch branch}))
 
 
-(defn show-status [{:remote? r :local? l}]
+(defn show-status [{:remote-changes? r :local-changes? l}]
   (match [r l]
     [false false]  [:span {:hx-get "/git-status" :hx-trigger "click"}
                      [:span {:class "hide-in-flight"}
@@ -62,8 +70,8 @@
                      [:span {:class "htmx-indicator" :style "float: right;"} "⚪"]]
     [:span "🤷"]))
 
-(test (show-status {:remote? true :local? true}) [:span "\xF0\x9F\x92\x80"])
-(test (show-status {:remote? true :local? false})
+(test (show-status {:remote-changes? true :local-changes? true}) [:span "\xF0\x9F\x92\x80"])
+(test (show-status {:remote-changes? true :local-changes? false})
   [:span
    [:span
     {:style "float: right;"}
@@ -82,6 +90,12 @@
 
   (macex '(git status))
 
+  (get-status)
+  (git status)
+  (git add ,git-dir)
+
+  (push-changes)
+
   (as-> (git status) _
               (string/split "\n" _)
               (reverse _))
@@ -92,5 +106,5 @@
 
   (get-status)
 
-  (show-status {:remote? true :local? false}))
+  (show-status {:remote-changes? true :local-changes? false}))
   
