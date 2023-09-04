@@ -27,6 +27,7 @@
 (route :post "/git-pull" :git-pull)
 (route :post "/git-force-pull" :git-force-pull)
 (route :post "/git-push" :git-push)
+(route :get "/get-content" :content)
 
 (defn to-list [items]
   (map (fn [item]
@@ -35,7 +36,7 @@
        items))
 
 (defn display-time [t]
-  (string "TODO"))
+  (string t))
 
 (defn display-project [p]
   (default p "")
@@ -81,7 +82,6 @@
                         :uuid uuid}]
                       [:tr {:data-target (string "modal-" uuid)
                             :onClick "toggleModal(event)"}
-                      # [:tr {:hx-get (string "/open/" uuid)}
                          [:td desc]
                          [:td {:style "white-space: pre-line"} (display-project p)]
                          [:td (math/floor u)]])
@@ -94,13 +94,25 @@
                             :sceduled sch
                             :uuid uuid}]
                           [:dialog {:id (string "modal-" uuid)}
-                            [:article
-                              [:p desc]
+                            [:article {:style "width: 100%;"}
+                              [:header
+                               [:h4 desc]]
+                              [:ul
+                                [:li (string "project: " p)]
+                                [:li (string "urgency: " (math/floor u))]
+                                [:li (string "scheduled: " (display-time sch))]
+                                [:li (string "due: " (display-time due))]]
                               [:footer
-                               [:button {:class "secondary"
-                                         :data-target (string "modal-" uuid)
-                                         :onClick "toggleModal(event)"} "cancel"]
-                               [:button {:class "primary"} "Complete"]]]])
+                                 [:a {:href "#cancel"
+                                      :role "button"
+                                      :class "secondary"
+                                      :data-target (string "modal-" uuid)
+                                      :onClick "toggleModal(event)"} "cancel"]
+                                 [:a {:href "#cancel"
+                                      :role "button"
+                                      :data-target (string "modal-" uuid)
+                                      :onClick "toggleModal(event)"
+                                      :class "primary"} "Complete"]]]])
                       items)]
     [[:table {:role "grid"}
        [:thead
@@ -124,13 +136,11 @@
          [:th "Description"]]]
       [:tbody rows]]))
 
-(defn home [request]
+(defn show-tasks []
   (let [today (task/get-today)
         inbox (task/get-inbox)]
-    [:main
-      (git-status-wrapper
-         [:span {:hx-get "/git-status" :hx-trigger "load"} "⚪"])
-
+    [:div {:id "content"}
+        
       # Inbox
       (when (not (= (length inbox) 0))
         [[:h3 "Inbox"]
@@ -140,9 +150,27 @@
       [:h3 "Today"]
       (to-table-mobile today)
 
+      [:button {:hx-get "/get-content"
+                :hx-trigger "click"
+                :hx-swap "outerHTML"
+                :hx-target "#content"
+                :style "float: right; margin: 10px; width: 60px;"}
+       [:span {:class "hide-in-flight"} "⬇"]
+       [:span {:class "htmx-indicator"} "⚪"]]
+
       [:p {:class "code"}
         [:p (string "showing " (length today) " tasks")]]]))
-        
+
+(defn content [request]
+  (show-tasks))
+
+(defn home [request]
+  [:main
+    (git-status-wrapper
+       [:span {:hx-get "/git-status" :hx-trigger "load"} "⚪"])
+    (show-tasks)])
+
+
 (defn git-status [request]
   (-> (git/get-status) (git/show-status)))
 
