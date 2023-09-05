@@ -17,3 +17,11 @@
   (let [output ($< task status:pending rc.context=none pro: export)
         json (json/decode output)]
     (map keyword-keys json)))
+
+(defn get-done-today []
+  (let [output ($< task status:completed rc.context=none end.after:tod export)
+        json (json/decode output)]
+    (map keyword-keys json)))
+
+(defn complete [uuid]
+  ($ task done ,uuid))

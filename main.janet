@@ -1,4 +1,5 @@
 (use joy)
+(use ./utils)
 (import ./taskwarrior :as task)
 (import ./git :as git)
 
@@ -28,13 +29,10 @@
 (route :post "/git-force-pull" :git-force-pull)
 (route :post "/git-push" :git-push)
 (route :get "/get-content" :content)
+(route :get "/complete/:uuid" :complete)
+(route :get "/error" :error-page)
 
-(defn to-list [items]
-  (map (fn [item]
-         (pp item)
-         [:li (get item :description)])
-       items))
-
+# TODO
 (defn display-time [t]
   (string t))
 
@@ -108,10 +106,10 @@
                                       :class "secondary"
                                       :data-target (string "modal-" uuid)
                                       :onClick "toggleModal(event)"} "cancel"]
-                                 [:a {:href "#cancel"
+                                 [:a {:href (string "/complete/" uuid)
                                       :role "button"
-                                      :data-target (string "modal-" uuid)
-                                      :onClick "toggleModal(event)"
+                                      # :data-target (string "modal-" uuid)
+                                      # :onClick "toggleModal(event)"
                                       :class "primary"} "Complete"]]]])
                       items)]
     [[:table {:role "grid"}
@@ -138,18 +136,17 @@
 
 (defn show-tasks []
   (let [today (task/get-today)
-        inbox (task/get-inbox)]
+        inbox (task/get-inbox)
+        done  (task/get-done-today)]
     [:div {:id "content"}
-        
       # Inbox
       (when (not (= (length inbox) 0))
         [[:h3 "Inbox"]
          (to-table-mobile-inbox inbox)])
-
       # Today
       [:h3 "Today"]
       (to-table-mobile today)
-
+      # Update button
       [:button {:hx-get "/get-content"
                 :hx-trigger "click"
                 :hx-swap "outerHTML"
@@ -157,9 +154,23 @@
                 :style "float: right; margin: 10px; width: 60px;"}
        [:span {:class "hide-in-flight"} "⬇"]
        [:span {:class "htmx-indicator"} "⚪"]]
-
+      # Footer
       [:p {:class "code"}
+        [:p (string "✅ today: " (length done))]
         [:p (string "showing " (length today) " tasks")]]]))
+
+(defn complete [request]
+  (let [uuid        (get-in request [:params :uuid])
+        [success v] (protect (task/complete uuid))]
+    (if success
+      (redirect-to :home)
+      (redirect-to :error-page {:? {:reason v}}))))
+
+(defn error-page [request]
+  (let [reason (get-in request [:query-string :reason])]
+    [:main
+      [:h3 "Error"]
+      [:p reason]]))
 
 (defn content [request]
   (show-tasks))
@@ -170,25 +181,22 @@
        [:span {:hx-get "/git-status" :hx-trigger "load"} "⚪"])
     (show-tasks)])
 
-
 (defn git-status [request]
-  (-> (git/get-status) (git/show-status)))
+  (-> (git/get-status)
+      (git/show-status)
+      (protect-error-page)))
 
 (defn git-pull [request]
-  (let [[success value] (-> (git/pull-changes) (protect)) # What should we do with the a failed value?
-        status (git/get-status)]
-    (git/show-status status)))
+  (protect-error-page (git/pull-changes))
+  (git/show-status (git/get-status)))
 
 (defn git-force-pull [request]
-  (let [[success value] (-> (git/force-pull-changes) (protect)) # What should we do with the a failed value?
-        status (git/get-status)]
-    (git/show-status status)))
-
+  (protect-error-page (git/force-pull-changes))
+  (git/show-status (git/get-status)))
 
 (defn git-push [request]
-  (let [[success value] (-> (git/push-changes) (protect)) # What should we do with the a failed value?
-        status (git/get-status)]
-    (git/show-status status)))
+  (protect-error-page (git/push-changes))
+  (git/show-status (git/get-status)))
 
 # Middleware
 (def app (-> (handler)
