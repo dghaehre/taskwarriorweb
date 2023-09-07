@@ -231,8 +231,7 @@
 (defn content [request]
   (show-tasks))
 
-(den add-modal [])
-  
+# (den add-modal [])
 
 (defn home [request]
   [:main {:class "container"}
