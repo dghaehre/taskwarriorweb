@@ -32,6 +32,7 @@
 (route :get "/complete/:uuid" :complete)
 (route :get "/modify/:uuid" :modify)
 (route :post "/modify/:uuid" :modify-post)
+(route :post "/add" :add)
 (route :get "/error" :error-page)
 
 # TODO: doesnt handle timezone.. which seems to be a problem..
@@ -120,11 +121,6 @@
                                 [:li (string "scheduled: " (display-time sch))]
                                 [:li (string "due: " (display-time due))]]
                               [:footer
-                                 [:a {:href "#cancel"
-                                      :role "button"
-                                      :class "secondary"
-                                      :data-target (string "modal-" uuid)
-                                      :onClick "toggleModal(event)"} "cancel"]
                                  [:a {:href (string "/modify/" uuid)
                                       :role "button"
                                       :class "primary"} "modify"]
@@ -145,13 +141,16 @@
   "Only showing description"
   (let [rows (map (fn [{:description desc
                         :uuid uuid}]
-                      [:tr {:hx-get (string "/open/" uuid)}
-                         [:td desc]])
+                      [:tr
+                         [:td desc]
+                         [:td
+                          [:a {:href (string "/modify/" uuid)} "Edit"]]])
                   items)]
     [:table {:role "grid"}
       [:thead
        [:tr
-         [:th "Description"]]]
+         [:th "Description"]
+         [:th ""]]]
       [:tbody rows]]))
 
 (defn show-tasks []
@@ -185,6 +184,13 @@
   (let [uuid          (get-in request [:params :uuid])
         modify-string (get-in request [:body :modify])
         [success err] (protect (task/modify uuid modify-string))]
+    (if success
+      (redirect-to :home)
+      (redirect-to :error-page {:? {:reason (string "could not modify item: " err)}}))))
+
+(defn add [request]
+  (let [desc (get-in request [:body :description])
+        [success err] (protect (task/add desc))]
     (if success
       (redirect-to :home)
       (redirect-to :error-page {:? {:reason (string "could not modify item: " err)}}))))
@@ -231,13 +237,30 @@
 (defn content [request]
   (show-tasks))
 
-# (den add-modal [])
+(defn add-modal []
+  [[:button {:style "position: fixed;
+                     bottom: 20px;
+                     right: 20px;
+                     width: 66px;
+                     font-size: 40px;
+                     padding: 0px;
+                     margin: 0px;"
+             :data-target "modal-add"
+             :onClick "toggleModal(event)"} "+"]
+   [:dialog {:id "modal-add"}
+     [:article {:style "width: 100%;"}
+       [:header
+          [:h4 "Add task"]]
+       [:form {:action "/add" :method "post"}
+         [:input {:type "text" :name "description"} ""]
+         [:button {:type "submit"} "Add"]]]]])
 
 (defn home [request]
   [:main {:class "container"}
     (git-status-wrapper
        [:span {:hx-get "/git-status" :hx-trigger "load"} "⚪"])
-    (show-tasks)])
+    (show-tasks)
+    (add-modal)])
 
 (defn git-status [request]
   (-> (git/get-status)

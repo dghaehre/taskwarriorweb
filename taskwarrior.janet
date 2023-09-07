@@ -34,6 +34,11 @@
 (defn modify [uuid modify-string]
   ($ task ,uuid mod ,modify-string))
 
+(defn add [description]
+  (default description "")
+  (if (= "" description) (error "no description given")
+    ($ task add ,description)))
+
 (defn complete [uuid]
   ($ task done ,uuid))
 
