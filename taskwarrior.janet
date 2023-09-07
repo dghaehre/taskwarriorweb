@@ -13,6 +13,11 @@
         json (json/decode output)]
     (map keyword-keys json)))
 
+(defn search [search]
+  (let [output ($< task status:pending rc.context=none ,search export)
+        json (json/decode output)]
+    (map keyword-keys json)))
+
 (defn get-inbox []
   (let [output ($< task status:pending rc.context=none pro: export)
         json (json/decode output)]
@@ -43,4 +48,6 @@
   ($ task done ,uuid))
 
 (comment
-  (get-item "0565502a-7329-4786-a919-7649c5"))
+  (get-item "0565502a-7329-4786-a919-7649c5")
+
+  (search "pro:arch.taskwarrior.web"))

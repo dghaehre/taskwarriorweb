@@ -34,6 +34,8 @@
 (route :post "/modify/:uuid" :modify-post)
 (route :post "/add" :add)
 (route :get "/error" :error-page)
+(route :get "/search" :search)
+(route :post "/search" :search-results)
 
 # TODO: doesnt handle timezone.. which seems to be a problem..
 (defn display-time [t]
@@ -50,6 +52,9 @@
 (defn display-project [p]
   (default p "")
   (-> (string/split "." p) (get 0)))
+
+(defn show-tags [tags]
+  "TODO")
 
 (defn display-done-bar [dones todos]
   (if (and (zero? dones) (zero? todos)) ""
@@ -109,6 +114,7 @@
                             :due due
                             :recur recur
                             :scheduled sch
+                            :tags tags
                             :uuid uuid}]
                           [:dialog {:id (string "modal-" uuid)}
                             [:article {:style "width: 100%;"}
@@ -118,6 +124,7 @@
                                 [:li (string "project: " p)]
                                 [:li (string "urgency: " (math/floor u))]
                                 [:li (string "recur: " recur)]
+                                [:li (string "tags: " (show-tags tags))]
                                 [:li (string "scheduled: " (display-time sch))]
                                 [:li (string "due: " (display-time due))]]
                               [:footer
@@ -204,6 +211,7 @@
             u (get v :urgency)
             recur (get v :recur)
             sch (get v :scheduled)
+            t (get v :tags)
             due (get v :due)]
         [:main {:class "container"}
           [:a {:href "/"
@@ -216,6 +224,7 @@
             [:li (string "urgency: " (math/floor u))]
             [:li (string "recur: " recur)]
             [:li (string "scheduled: " (display-time sch))]
+            [:li (string "tags: " (show-tags t))]
             [:li (string "due: " (display-time due))]]
           [:form {:action (string "/modify/" uuid) :method "post"}
             [:input {:type "text" :name "modify"} ""]
@@ -254,6 +263,33 @@
        [:form {:action "/add" :method "post"}
          [:input {:type "text" :name "description"} ""]
          [:button {:type "submit"} "Add"]]]]])
+
+(defn search-results [request]
+  (let [s (get-in request [:body :search])
+        [success v] (protect (task/search s))]
+    (if (not success)
+      [:p (string "ERROR: " v)]
+      [[:p (string "showing: " (length v))
+         (to-table-mobile v)]])))
+
+(defn search [request]
+  [:main {:class "container"}
+    [:a {:href "/"
+         :role "button"
+         :class "secondary"
+         :style "float: right;"} "back"]
+    [:h4  "search"]
+
+    [:input {:hx-post "/search"
+             :name "search"
+             :hx-trigger "keyup changed delay:500ms, search" 
+             :hx-target "#search-results"
+             :hx-indicator ".htmx-indicator"}]
+    [:div {:id "search-results"}]])
+
+    # [:form {:action "/search" :method "post"}
+    #   [:input {:type "text" :name "search"} ""]
+    #   [:button {:type "submit"} "Search"]]])
 
 (defn home [request]
   [:main {:class "container"}
