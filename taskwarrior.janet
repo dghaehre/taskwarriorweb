@@ -9,7 +9,7 @@
   result)
 
 (defn get-today []
-  (let [output ($< task scheduled.before:eod export ready)
+  (let [output ($< task "(scheduled.before:eod or due.before:tom+24h)" export ready)
         json (json/decode output)]
     (map keyword-keys json)))
 
@@ -48,6 +48,7 @@
   ($ task done ,uuid))
 
 (comment
+  (get-today)
   (get-item "0565502a-7329-4786-a919-7649c5")
 
   (search "pro:arch.taskwarrior.web"))

@@ -160,6 +160,14 @@
          [:th ""]]]
       [:tbody rows]]))
 
+(defn navbar []
+  [:nav
+   [:ul
+    [:li ""]]
+   [:ul
+    [:li [:a {:href "/" :class "secondary"} "home"]]
+    [:li [:a {:href "/search" :class "secondary"} "search"]]]])
+
 (defn show-tasks []
   (let [today (task/get-today)
         inbox (task/get-inbox)
@@ -167,11 +175,12 @@
     [:div {:id "content"}
       # Inbox
       (when (not (= (length inbox) 0))
-        [[:h3 "Inbox"]
+        [[:h4 "Inbox"]
          (to-table-mobile-inbox inbox)])
       # Today
-      [:h3 "Today"]
-      [:p (display-done-bar (length done) (length today))]
+      [:h4 "Today"
+        [:span {:style "font-size: 12px; margin-left: 10px;"}
+          (string (length done) "/" (+ (length today) (length done)))]]
       # Update button
       [:button {:hx-get "/get-content"
                 :hx-trigger "click"
@@ -182,10 +191,10 @@
                 :class "secondary outline"}
        [:span {:class "hide-in-flight"} "Fetch"]
        [:span {:class "htmx-indicator"} [:span {:aria-busy "true"}]]]
-      (to-table-mobile today)
+      (to-table-mobile today)]))
       # Footer
-      [:p {:class "code"}
-        [:p (string "showing " (length today) " tasks")]]]))
+      # [:p {:class "code"}
+      #   [:p (string "showing " (length today) " tasks")]]]))
 
 (defn modify-post [request]
   (let [uuid          (get-in request [:params :uuid])
@@ -214,10 +223,7 @@
             t (get v :tags)
             due (get v :due)]
         [:main {:class "container"}
-          [:a {:href "/"
-               :role "button"
-               :class "secondary"
-               :style "float: right;"} "back"]
+          (navbar)
           [:h4 desc]
           [:ul
             [:li (string "project: " p)]
@@ -240,6 +246,7 @@
 (defn error-page [request]
   (let [reason (get-in request [:query-string :reason])]
     [:main {:class "container"}
+      (navbar)
       [:h3 "Error"]
       [:p reason]]))
 
@@ -274,25 +281,16 @@
 
 (defn search [request]
   [:main {:class "container"}
-    [:a {:href "/"
-         :role "button"
-         :class "secondary"
-         :style "float: right;"} "back"]
-    [:h4  "search"]
-
+    (navbar)
     [:input {:hx-post "/search"
              :name "search"
              :hx-trigger "keyup changed delay:500ms, search" 
-             :hx-target "#search-results"
-             :hx-indicator ".htmx-indicator"}]
+             :hx-target "#search-results"}]
     [:div {:id "search-results"}]])
-
-    # [:form {:action "/search" :method "post"}
-    #   [:input {:type "text" :name "search"} ""]
-    #   [:button {:type "submit"} "Search"]]])
 
 (defn home [request]
   [:main {:class "container"}
+    (navbar)
     (git-status-wrapper
        [:span {:hx-get "/git-status" :hx-trigger "load"} "⚪"])
     (show-tasks)
