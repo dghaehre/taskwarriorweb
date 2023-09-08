@@ -13,8 +13,8 @@
         json (json/decode output)]
     (map keyword-keys json)))
 
-(defn search [search]
-  (let [output ($< task status:pending rc.context=none ,search export)
+(defn search [s]
+  (let [output ($< task status:pending rc.context=none ,s export)
         json (json/decode output)]
     (map keyword-keys json)))
 
