@@ -31,6 +31,7 @@
 (route :get "/get-content" :content)
 (route :get "/complete/:uuid" :complete)
 (route :get "/modify/:uuid" :modify)
+(route :get "/delete/:uuid" :delete)
 (route :post "/modify/:uuid" :modify-post)
 (route :post "/add" :add)
 (route :get "/error" :error-page)
@@ -128,6 +129,9 @@
                                 [:li (string "scheduled: " (display-time sch))]
                                 [:li (string "due: " (display-time due))]]
                               [:footer
+                                 [:a {:href (string "/delete/" uuid)
+                                      :role "button"
+                                      :class "secondary"} "delete"]
                                  [:a {:href (string "/modify/" uuid)
                                       :role "button"
                                       :class "primary"} "modify"]
@@ -225,6 +229,10 @@
         [:main {:class "container"}
           (navbar)
           [:h4 desc]
+          [:a {:href (string "/delete/" uuid)
+                :role "button"
+                :style "float: right"
+                :class "secondary"} "delete"]
           [:ul
             [:li (string "project: " p)]
             [:li (string "urgency: " (math/floor u))]
@@ -235,6 +243,14 @@
           [:form {:action (string "/modify/" uuid) :method "post"}
             [:input {:type "text" :name "modify"} ""]
             [:button {:type "submit"} "Modify"]]]))))
+
+(defn delete [request]
+  (let [uuid        (get-in request [:params :uuid])
+        [success v] (protect (task/delete uuid))]
+    (if success
+      (redirect-to :home)
+      (redirect-to :error-page {:? {:reason v}}))))
+
 
 (defn complete [request]
   (let [uuid        (get-in request [:params :uuid])

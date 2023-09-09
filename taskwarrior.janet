@@ -42,10 +42,13 @@
 (defn add [description]
   (default description "")
   (if (= "" description) (error "no description given")
-    ($ task add ,description)))
+    ($ task rc.context=none add ,description)))
 
 (defn complete [uuid]
   ($ task done ,uuid))
+
+(defn delete [uuid]
+  ($ task rc.confirmation=off rm ,uuid))
 
 (comment
   (get-today)
