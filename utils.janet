@@ -12,3 +12,6 @@
   ~(let [[success v] (protect ,body)]
     (if success v
       (htmx-redirect :error-page {:? {:reason v}}))))
+
+(defn exist? [x]
+ (and (not (nil? x)) (not (= "" x))))

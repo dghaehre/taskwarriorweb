@@ -37,6 +37,7 @@
 (route :get "/error" :error-page)
 (route :get "/search" :search)
 (route :post "/search" :search-results)
+(route :get "/completed" :completed)
 
 # TODO: doesnt handle timezone.. which seems to be a problem..
 (defn display-time [t]
@@ -93,10 +94,13 @@
   [:div {:style "float: right; height: 50px; margin: 10px;" :id "git-status"}
     content])
   
-(defn to-table-mobile [items]
+(defn to-table-mobile [items &opt options]
   "Only showing description, project and urgency"
-  (pp items)
-  (let [rows (map (fn [{:description desc
+  (default options {})
+  (let [allow-modification  (get options :allow-modification true)
+        show-urgency        (get options :show-urgency true)
+        show-scheduled      (get options :show-scheduled true)
+        rows (map (fn [{:description desc
                         :project p
                         :urgency u
                         :due due
@@ -106,7 +110,8 @@
                             :onClick "toggleModal(event)"}
                          [:td desc]
                          [:td {:style "white-space: pre-line"} (display-project p)]
-                         [:td (math/floor u)]])
+                         (when show-urgency
+                           [:td (math/floor u)])])
                   items)
 
           modals (map (fn [{:description desc
@@ -115,6 +120,7 @@
                             :due due
                             :recur recur
                             :scheduled sch
+                            :end end
                             :tags tags
                             :uuid uuid}]
                           [:dialog {:id (string "modal-" uuid)}
@@ -123,28 +129,37 @@
                                [:h4 desc]]
                               [:ul
                                 [:li (string "project: " p)]
-                                [:li (string "urgency: " (math/floor u))]
-                                [:li (string "recur: " recur)]
-                                [:li (string "tags: " (show-tags tags))]
-                                [:li (string "scheduled: " (display-time sch))]
-                                [:li (string "due: " (display-time due))]]
-                              [:footer
-                                 [:a {:href (string "/delete/" uuid)
-                                      :role "button"
-                                      :class "secondary"} "delete"]
-                                 [:a {:href (string "/modify/" uuid)
-                                      :role "button"
-                                      :class "primary"} "modify"]
-                                 [:a {:href (string "/complete/" uuid)
-                                      :role "button"
-                                      :class "primary"} "Complete"]]]])
+                                (when show-urgency
+                                  [:li (string "urgency: " (math/floor u))])
+                                (when (exist? recur)
+                                  [:li (string "recur: " recur)])
+                                (when (exist? tags)
+                                  [:li (string "tags: " (show-tags tags))])
+                                (when (and show-scheduled (exist? sch))
+                                  [:li (string "scheduled: " (display-time sch))])
+                                (when (exist? due)
+                                  [:li (string "due: " (display-time due))])
+                                (when (exist? end)
+                                  [:li (string "end: " (display-time end))])]
+                              (when allow-modification
+                                [:footer
+                                   [:a {:href (string "/delete/" uuid)
+                                        :role "button"
+                                        :class "secondary"} "delete"]
+                                   [:a {:href (string "/modify/" uuid)
+                                        :role "button"
+                                        :class "primary"} "modify"]
+                                   [:a {:href (string "/complete/" uuid)
+                                        :role "button"
+                                        :class "primary"} "Complete"]])]])
                       items)]
     [[:table {:role "grid"}
        [:thead
         [:tr
           [:th "Description"]
           [:th "Project"]
-          [:th ""]]]
+          (when show-urgency
+            [:th ""])]]
        [:tbody rows]
       modals]]))
 
@@ -169,8 +184,9 @@
    [:ul
     [:li ""]]
    [:ul
-    [:li [:a {:href "/" :class "secondary"} "home"]]
-    [:li [:a {:href "/search" :class "secondary"} "search"]]]])
+    [:li [:a {:href "/completed" :class "secondary"} "completed"]]
+    [:li [:a {:href "/search" :class "secondary"} "search"]]
+    [:li [:a {:href "/" :class "secondary"} "home"]]]])
 
 (defn show-tasks []
   (let [today (task/get-today)
@@ -303,6 +319,15 @@
              :hx-trigger "keyup changed delay:500ms, search" 
              :hx-target "#search-results"}]
     [:div {:id "search-results"}]])
+
+(defn completed [request]
+  (let [done (task/get-done-today)]
+    [:main {:class "container"}
+      (navbar)
+      [:h3 (string "done today: " (length done))] 
+      (to-table-mobile done {:allow-modification false
+                             :show-scheduled false
+                             :show-urgency false})]))
 
 (defn home [request]
   [:main {:class "container"}
