@@ -54,4 +54,4 @@
   (get-today)
   (get-item "0565502a-7329-4786-a919-7649c5")
 
-  (search "pro:arch.taskwarrior.web"))
+  (length (search "allow pro:arch.taskwarrior.web")))

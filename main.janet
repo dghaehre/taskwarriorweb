@@ -1,5 +1,6 @@
 (use joy)
 (use ./utils)
+(import ./chart :as chart)
 (import ./taskwarrior :as task)
 (import ./git :as git)
 
@@ -100,6 +101,7 @@
   (let [allow-modification  (get options :allow-modification true)
         show-urgency        (get options :show-urgency true)
         show-scheduled      (get options :show-scheduled true)
+        show-header         (get options :show-header true)
         rows (map (fn [{:description desc
                         :project p
                         :urgency u
@@ -156,9 +158,9 @@
     [[:table {:role "grid"}
        [:thead
         [:tr
-          [:th "Description"]
-          [:th "Project"]
-          (when show-urgency
+          [:th (if show-header "Description" "")]
+          [:th (if show-header "Project" "")]
+          (when (and show-urgency show-header)
             [:th ""])]]
        [:tbody rows]
       modals]]))
@@ -321,13 +323,30 @@
     [:div {:id "search-results"}]])
 
 (defn completed [request]
-  (let [done (task/get-done-today)]
+  (let [done (task/get-done-today)
+        arch-done (length (filter |(is-project? $ "arch") done))
+        personal-done (length (filter |(is-project? $ "personal") done))
+        vipps-done (length (filter |(is-project? $ "vipps") done))]
     [:main {:class "container"}
       (navbar)
-      [:h3 (string "done today: " (length done))] 
+      [:h4 {:style "float: left;"} (string "today (" (length done) ")")]
+      [:table {:style "width: 100px; float: right;"}
+         [:tbody
+            [:tr
+              [:td "vipps"]
+              [:td vipps-done]]
+            [:tr
+              [:td "personal"]
+              [:td personal-done]]
+            [:tr
+              [:td "arch"]
+              [:td arch-done]]]]
       (to-table-mobile done {:allow-modification false
                              :show-scheduled false
-                             :show-urgency false})]))
+                             :show-header false
+                             :show-urgency false})
+      [:div {:style "margin-top: 100px;"}
+        (chart/completed [1 2 3 4 5 6 7])]]))
 
 (defn home [request]
   [:main {:class "container"}
