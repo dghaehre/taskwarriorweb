@@ -32,12 +32,13 @@ const myChart = new Chart(
   ["ma" "ti" "on" "to" "fr" "lø" "sø"])
   
 
-(defn completed [data]
-  (assert (= 7 (length data)))
-  (let [labels (create-labels)]
-    [[:script {:src "/xxx.chart.js"}]
-     [:h4 "last seven days "
-        [:small (string " (" (sum data) ")")]]
-     [:canvas {:id "chart"}]
-     (create-chart data labels)]))
+(defn completed-last-seven-days []
+  (let [data [1 2 3 3 5 6 7]]
+    (assert (= 7 (length data)))
+    (let [labels (create-labels)]
+      [[:script {:src "/xxx.chart.js"}]
+       [:h4 "last seven days "
+          [:small (string " (" (sum data) ")")]]
+       [:canvas {:id "chart"}]
+       (create-chart data labels)])))
 

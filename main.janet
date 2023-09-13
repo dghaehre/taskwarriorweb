@@ -346,7 +346,7 @@
                              :show-header false
                              :show-urgency false})
       [:div {:style "margin-top: 100px;"}
-        (chart/completed [1 2 3 4 5 6 7])]]))
+        (chart/completed-last-seven-days)]]))
 
 (defn home [request]
   [:main {:class "container"}
