@@ -9,7 +9,7 @@
   result)
 
 (defn get-today []
-  (let [output ($< task "(scheduled.before:eod or due.before:tom+24h)" export ready)
+  (let [output ($< task "(scheduled.before:eod or due.before:tom+48h)" export ready)
         json (json/decode output)]
     (map keyword-keys json)))
 
