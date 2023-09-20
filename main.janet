@@ -190,11 +190,14 @@
     [:li [:a {:href "/search" :class "secondary"} "search"]]
     [:li [:a {:href "/" :class "secondary"} "home"]]]])
 
-(defn show-tasks []
+(defn show-tasks [&opt git-status]
+  (default git-status {:load? true})
   (let [today (task/get-today)
         inbox (task/get-inbox)
         done  (task/get-done-today)]
     [:div {:id "content"}
+      (git-status-wrapper
+         (git/show-status git-status))
       # Inbox
       (when (not (= (length inbox) 0))
         [[:h4 "Inbox"]
@@ -203,20 +206,7 @@
       [:h4 "Today"
         [:span {:style "font-size: 12px; margin-left: 10px;"}
           (string (length done) "/" (+ (length today) (length done)))]]
-      # Update button
-      [:button {:hx-get "/get-content"
-                :hx-trigger "click"
-                :hx-swap "outerHTML"
-                :hx-target "#content"
-                :role "button"
-                :style "width: 100px"
-                :class "secondary outline"}
-       [:span {:class "hide-in-flight"} "Fetch"]
-       [:span {:class "htmx-indicator"} [:span {:aria-busy "true"}]]]
       (to-table-mobile today)]))
-      # Footer
-      # [:p {:class "code"}
-      #   [:p (string "showing " (length today) " tasks")]]]))
 
 (defn modify-post [request]
   (let [uuid          (get-in request [:params :uuid])
@@ -285,7 +275,8 @@
       [:p reason]]))
 
 (defn content [request]
-  (show-tasks))
+  (let [g (git/get-status)]
+    (show-tasks g)))
 
 (defn add-modal []
   [[:button {:style "position: fixed;
@@ -351,8 +342,6 @@
 (defn home [request]
   [:main {:class "container"}
     (navbar)
-    (git-status-wrapper
-       [:span {:hx-get "/git-status" :hx-trigger "load"} "⚪"])
     (show-tasks)
     (add-modal)])
 
@@ -363,7 +352,8 @@
 
 (defn git-pull [request]
   (protect-error-page (git/pull-changes))
-  (git/show-status (git/get-status)))
+  (let [g (git/get-status)]
+    (show-tasks (git/get-status))))
 
 (defn git-force-pull [request]
   (protect-error-page (git/force-pull-changes))
@@ -371,7 +361,8 @@
 
 (defn git-push [request]
   (protect-error-page (git/push-changes))
-  (git/show-status (git/get-status)))
+  (let [g (git/get-status)]
+    (show-tasks (git/get-status))))
 
 # Middleware
 (def app (-> (handler)

@@ -21,9 +21,9 @@
     (git pull origin ,branch)))
 
 (defn force-pull-changes []
-  (let [branch (get-branch)]
-    (git reset --hard HEAD) # Reset everything
-    (git pull origin ,branch)))
+  (git restore ,git-dir)
+  (git reset --hard HEAD)
+  (pull-changes))
 
 (defn get-status []
   (let [branch (get-branch)
@@ -43,41 +43,82 @@
      :local-changes? local # Do we have local changes
      :branch branch}))
 
-
-(defn show-status [{:remote-changes? r :local-changes? l}]
+(defn git-status-action-new [{:remote-changes? r :local-changes? l}]
   (match [r l]
-    [false false]  [:span {:hx-get "/git-status" :hx-trigger "click"}
-                     [:span {:class "hide-in-flight"}
-                       [:span {:style "color: green"} "🟢"]]
-                     [:span {:class "htmx-indicator" :style "float: right;"} "⚪"]]
-    [true true]   [:span {:hx-post "/git-pull-force" :hx-trigger "click"}
-                     [:span {:class "hide-in-flight"}
-                       [:span {:style "float: right;"} "💀"]
-                       [:br]
-                       [:span  "Force pull changes"]]
-                     [:span {:class "htmx-indicator" :style "float: right;"} "⚪"]]
-    [true false]   [:span {:hx-post "/git-pull" :hx-trigger "click"}
-                     [:span {:class "hide-in-flight"}
-                       [:span {:style "float: right;"} "🟡"]
-                       [:br]
-                       [:span  "Pull changes"]]
-                     [:span {:class "htmx-indicator" :style "float: right;"} "⚪"]]
-    [false true]   [:span {:hx-post "/git-push" :hx-trigger "click"}
-                     [:span {:class "hide-in-flight"}
-                       [:span {:style "float: right;"} "🟡"]
-                       [:br]
-                       [:span  "Push changes"]]
-                     [:span {:class "htmx-indicator" :style "float: right;"} "⚪"]]
-    [:span "🤷"]))
+    [false false] {:action {:hx-get "/get-content"}
+                   :class "secondary outline git-good"
+                   :text "Fetch"}
+    [true false]  {:action {:hx-post "/git-pull"}
+                   :class "secondary outline git-pull"
+                   :text "Pull"}
+    [false true]  {:action {:hx-post "/git-push"}
+                   :class "secondary outline git-pull"
+                   :text "Push"}
+    [true true]   {:action {:hx-post "/git-pull-force"}
+                   :class "secondary outline git-error"
+                   :text "Force pull 💀"}
+    {:action {:hx-get "/get-content"}
+     :class "secondary outline"
+     :text "ooops"}))
 
-(test (show-status {:remote-changes? true :local-changes? true}) [:span "\xF0\x9F\x92\x80"])
-(test (show-status {:remote-changes? true :local-changes? false})
-  [:span
+(defn show-status [g]
+  (let [{:action action
+         :class class
+         :text text} (git-status-action-new g)
+        load (get g :load?)]
+    [:button (merge action
+                    {:hx-trigger (if load "load" "click")
+                     :hx-swap "outerHTML"
+                     :hx-target "#content"
+                     :role "button"
+                     :style "width: 130px"
+                     :class class})
+       [:span {:class "hide-in-flight"} text]
+       [:span {:class "htmx-indicator"} [:span {:aria-busy "true"}]]]))
+
+(test (show-status {:remote-changes? true :local-changes? true})
+  [:button
+   @{:class "secondary outline git-error"
+     :hx-post "/git-pull-force"
+     :hx-swap "outerHTML"
+     :hx-target "#content"
+     :hx-trigger "click"
+     :role "button"
+     :style "width: 130px"}
    [:span
-    {:style "float: right;"}
-    "\xF0\x9F\x9F\xA0"]
-   [:br]
-   [:a {:href "/git-pull"} "Pull changes"]])
+    {:class "hide-in-flight"}
+    "Force pull \xF0\x9F\x92\x80"]
+   [:span
+    {:class "htmx-indicator"}
+    [:span {:aria-busy "true"}]]])
+(test (show-status {:load? true})
+  [:button
+   @{:class "secondary outline"
+     :hx-get "/get-content"
+     :hx-swap "outerHTML"
+     :hx-target "#content"
+     :hx-trigger "load"
+     :role "button"
+     :style "width: 130px"}
+   [:span
+    {:class "hide-in-flight"}
+    "ooops"]
+   [:span
+    {:class "htmx-indicator"}
+    [:span {:aria-busy "true"}]]])
+(test (show-status {:remote-changes? true :local-changes? false})
+  [:button
+   @{:class "secondary outline git-pull"
+     :hx-post "/git-pull"
+     :hx-swap "outerHTML"
+     :hx-target "#content"
+     :hx-trigger "click"
+     :role "button"
+     :style "width: 130px"}
+   [:span {:class "hide-in-flight"} "Pull"]
+   [:span
+    {:class "htmx-indicator"}
+    [:span {:aria-busy "true"}]]])
 
 (comment
   (as-> (git status) _

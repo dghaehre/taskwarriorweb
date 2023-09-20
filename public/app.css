@@ -13,3 +13,15 @@ code, .code {
 .htmx-request .hide-in-flight{
   display: none;
 }
+
+.git-good {
+  border-color: green !important;
+}
+
+.git-pull {
+  border-color: orange !important;
+}
+
+.git-error {
+  border-color: red !important;
+}
