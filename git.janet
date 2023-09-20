@@ -79,7 +79,7 @@
 (test (show-status {:remote-changes? true :local-changes? true})
   [:button
    @{:class "secondary outline git-error"
-     :hx-post "/git-pull-force"
+     :hx-post "/git-force-pull"
      :hx-swap "outerHTML"
      :hx-target "#content"
      :hx-trigger "click"
@@ -87,7 +87,7 @@
      :style "width: 130px"}
    [:span
     {:class "hide-in-flight"}
-    "Force pull \xF0\x9F\x92\x80"]
+    "Force pull"]
    [:span
     {:class "htmx-indicator"}
     [:span {:aria-busy "true"}]]])

@@ -1,4 +1,5 @@
 (use joy)
+(use judge)
 (use ./utils)
 (import ./chart :as chart)
 (import ./taskwarrior :as task)
@@ -57,7 +58,12 @@
   (-> (string/split "." p) (get 0)))
 
 (defn show-tags [tags]
-  "TODO")
+  (default tags @[])
+  (string/join (map |(string "+" $) tags) " "))
+
+(test (show-tags nil) "")
+(test (show-tags @[]) "")
+(test (show-tags @["test" "hey"]) "+test +hey")
 
 (defn display-done-bar [dones todos]
   (if (and (zero? dones) (zero? todos)) ""
