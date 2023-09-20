@@ -54,9 +54,9 @@
     [false true]  {:action {:hx-post "/git-push"}
                    :class "secondary outline git-pull"
                    :text "Push"}
-    [true true]   {:action {:hx-post "/git-pull-force"}
+    [true true]   {:action {:hx-post "/git-force-pull"}
                    :class "secondary outline git-error"
-                   :text "Force pull 💀"}
+                   :text "Force pull"}
     {:action {:hx-get "/get-content"}
      :class "secondary outline"
      :text "ooops"}))
