@@ -352,17 +352,15 @@
 
 (defn git-pull [request]
   (protect-error-page (git/pull-changes))
-  (let [g (git/get-status)]
-    (show-tasks (git/get-status))))
+  (show-tasks (git/get-status)))
 
 (defn git-force-pull [request]
   (protect-error-page (git/force-pull-changes))
-  (git/show-status (git/get-status)))
+  (show-tasks (git/get-status)))
 
 (defn git-push [request]
   (protect-error-page (git/push-changes))
-  (let [g (git/get-status)]
-    (show-tasks (git/get-status))))
+  (show-tasks (git/get-status)))
 
 # Middleware
 (def app (-> (handler)
