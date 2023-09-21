@@ -4,6 +4,7 @@
 (import ./chart :as chart)
 (import ./taskwarrior :as task)
 (import ./git :as git)
+(use time)
 
 
 # Layout
@@ -41,17 +42,22 @@
 (route :post "/search" :search-results)
 (route :get "/completed" :completed)
 
-# TODO: doesnt handle timezone.. which seems to be a problem..
+# TODO: add tomorrow, yestaerday etc.
 (defn display-time [t]
   (default t "")
   (if (= t "") ""
-    (let [[datestring timestring] (string/split "T" t)
-          year (string/slice datestring 0 4)
-          month (string/slice datestring 4 6)
-          day (string/slice datestring 6 8)
-          hour (string/slice timestring 0 2)
-          minutes (string/slice timestring 2 4)]
-      (string (string day "/" month "/" year) " " hour ":" minutes))))
+    (let [{:month-day d
+           :month m
+           :year y
+           :minutes minutes
+           :hours hours} (os/date (time/parse "%Y%m%dT%H%M%S%z" t "UTC") :local)]
+      (string (string (+ 1 d) "/" (+ 1 m) "/" y)
+              (if (and (= hours 0) (= minutes 0)) ""
+                (string " " hours ":" minutes))))))
+
+(test (display-time "20230913T174428Z") "13/9/2023 19:44")
+(test (time/parse "%Y%m%dT%H%M%S%z" "20230913T174428Z"))
+(test (display-time "") "")
 
 (defn display-project [p]
   (default p "")
