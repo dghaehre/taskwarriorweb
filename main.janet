@@ -42,23 +42,6 @@
 (route :post "/search" :search-results)
 (route :get "/completed" :completed)
 
-# TODO: add tomorrow, yestaerday etc.
-(defn display-time [t]
-  (default t "")
-  (if (= t "") ""
-    (let [{:month-day d
-           :month m
-           :year y
-           :minutes minutes
-           :hours hours} (os/date (time/parse "%Y%m%dT%H%M%S%z" t "UTC") :local)]
-      (string (string (+ 1 d) "/" (+ 1 m) "/" y)
-              (if (and (= hours 0) (= minutes 0)) ""
-                (string " " hours ":" minutes))))))
-
-(test (display-time "20230913T174428Z") "13/9/2023 19:44")
-(test (time/parse "%Y%m%dT%H%M%S%z" "20230913T174428Z"))
-(test (display-time "") "")
-
 (defn display-project [p]
   (default p "")
   (-> (string/split "." p) (get 0)))

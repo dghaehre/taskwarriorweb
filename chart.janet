@@ -1,5 +1,7 @@
 (use joy)
 (import json)
+(import ./taskwarrior :as task)
+(use ./utils)
 
 # TODO: add graph based on project!
 # I think maybe we should put the sql stuff in here. It is so tightly coupled
@@ -27,18 +29,29 @@ const myChart = new Chart(
   config
 );"))])
 
-(defn- create-labels []
-  "TODO"
-  ["ma" "ti" "on" "to" "fr" "lø" "sø"])
+(defn- create-labels [data]
+  (def {:year-day today} (os/date))
+  (defn create-label [items]
+    (let [day (-> (get items 0 {:day 0})
+                  (get :day))]
+      (cond
+        (= today day) "today"
+        (= today (inc day)) "yesterday"
+        (display-time (-> (get items 0)
+                          (get :end ""))))))
+  (map create-label data))
   
+(defn to-numbers [data]
+  (map |(length $) data))
 
 (defn completed-last-seven-days []
-  (let [data [1 2 3 3 5 6 7]]
-    (assert (= 7 (length data)))
-    (let [labels (create-labels)]
+  (let [data (task/get-last-seven-days)]
+    # (assert (= 7 (length data)))
+    (let [labels (create-labels data)
+          numbers (to-numbers data)]
       [[:script {:src "/xxx.chart.js"}]
        [:h4 "last seven days "
-          [:small (string " (" (sum data) ")")]]
+          [:small (string " (" (sum numbers) ")")]]
        [:canvas {:id "chart"}]
-       (create-chart data labels)])))
+       (create-chart numbers labels)])))
 
