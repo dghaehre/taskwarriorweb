@@ -308,25 +308,22 @@
              :hx-target "#search-results"}]
     [:div {:id "search-results"}]])
 
+(defn summary-table [items]
+  (let [projects (get-root-projects items)]
+    [:table {:style "width: 100px; float: right;"}
+       [:tbody
+          (map (fn [p]
+                 [:tr
+                   [:td p]
+                   [:td (length (filter |(is-project? $ p) items))]]) projects)]]))
+
+
 (defn completed [request]
-  (let [done (task/get-done-today)
-        arch-done (length (filter |(is-project? $ "arch") done))
-        personal-done (length (filter |(is-project? $ "personal") done))
-        vipps-done (length (filter |(is-project? $ "vipps") done))]
+  (let [done (task/get-done-today)]
     [:main {:class "container"}
       (navbar)
       [:h4 {:style "float: left;"} (string "today (" (length done) ")")]
-      [:table {:style "width: 100px; float: right;"}
-         [:tbody
-            [:tr
-              [:td "vipps"]
-              [:td vipps-done]]
-            [:tr
-              [:td "personal"]
-              [:td personal-done]]
-            [:tr
-              [:td "arch"]
-              [:td arch-done]]]]
+      (summary-table done)
       (to-table-mobile done {:allow-modification false
                              :show-scheduled false
                              :show-header false

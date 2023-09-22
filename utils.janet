@@ -49,4 +49,14 @@
 (test (time/parse "%Y%m%dT%H%M%S%z" "20230913T174428Z") 1694619868)
 (test (display-time "") "")
 
+(defn get-root-projects [items]
+  (var projects @{})
+  (each i items
+    (let [root (as->  (get i :project "") _
+                      (string/split "." _)
+                      (get _ 0))]
+     (put projects root true)))
+  (keys projects))
 
+(test (get-root-projects [{:project "a.b.c"} {:project "a.b.d"} {:project "hei.sdf"}]) @["a" "hei"])
+(test (get-root-projects []) @[])
