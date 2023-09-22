@@ -1,7 +1,6 @@
 (use joy)
 (import json)
 (import ./taskwarrior :as task)
-(use ./utils)
 
 # TODO: add graph based on project!
 # I think maybe we should put the sql stuff in here. It is so tightly coupled
@@ -37,8 +36,7 @@ const myChart = new Chart(
       (cond
         (= today day) "today"
         (= today (inc day)) "yesterday"
-        (display-time (-> (get items 0)
-                          (get :end ""))))))
+        "")))
   (map create-label data))
   
 (defn to-numbers [data]
