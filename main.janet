@@ -193,14 +193,14 @@
     [:div {:id "content"}
       (git-status-wrapper
          (git/show-status git-status))
-      # Inbox
-      (when (not (= (length inbox) 0))
-        [[:h4 "Inbox"]
-         (to-table-mobile-inbox inbox)])
       # Today
       [:h4 "Today"
         [:span {:style "font-size: 12px; margin-left: 10px;"}
           (string (length done) "/" (+ (length today) (length done)))]]
+      # Inbox
+      (when (not (= (length inbox) 0))
+        [[:h4 "Inbox"]
+         (to-table-mobile-inbox inbox)])
       (to-table-mobile today)]))
 
 (defn modify-post [request]
