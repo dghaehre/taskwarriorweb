@@ -40,8 +40,11 @@
         (if (empty? list) (error "no item found")
           (get list 0))))))
 
-(defn modify [uuid modify-string]
+(defn modify-custom-string [uuid modify-string]
   ($ task ,uuid mod ,modify-string))
+
+(defn modify [uuid scheduled due]
+  (error "TODO"))
 
 (defn add [description]
   (default description "")
@@ -74,7 +77,23 @@
        (map keyword-keys)
        (group-by-days)))
 
+# (defn get-projects [&opt prefix]
+#   (let [level (if (nil? prefix) 0
+#                   (length (string/find-all "." prefix)))
+#         projects (->> ($< task _unique project)
+#                       (string/split "\n")
+#                       (filter |(not (empty? $))))
+#         filtered (if (nil? prefix) projects
+#                      (-> (filter |(string/has-prefix? prefix $) projects)))]
+#     (->> filtered
+#          (map |(get (string/split "." $) level)))))
+#     # (if (nil? prefix) projects
+#     #    (-> (filter |(string/has-prefix? prefix $) projects)))))
+
 (comment
+
+
+  # (get-projects)
 
   (get-last-seven-days)
 

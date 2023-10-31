@@ -10,6 +10,11 @@
       :headers @{"Location" location
                  "HX-Redirect" location}}))
 
+(defn url-redirect [path]
+  @{:status 302
+    :body " "
+    :headers @{"Location" path}})
+
 (defmacro protect-error-page [body]
   ~(let [[success v] (protect ,body)]
     (if success v

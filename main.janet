@@ -1,6 +1,7 @@
 (use joy)
 (use judge)
 (use ./utils)
+(use ./components)
 (import ./chart :as chart)
 (import ./taskwarrior :as task)
 (import ./git :as git)
@@ -41,6 +42,9 @@
 (route :get "/search" :search)
 (route :post "/search" :search-results)
 (route :get "/completed" :completed)
+
+# components
+(route :get "/components/custom-input-button" custom-input-button-handler)
 
 (defn display-project [p]
   (default p "")
@@ -204,11 +208,22 @@
       (to-table-mobile today)]))
 
 (defn modify-post [request]
+  """
+  There are two ways to modify a task:
+  - custom input (name)
+  - or by using the form (scheduled, due, project)
+  """
   (let [uuid          (get-in request [:params :uuid])
         modify-string (get-in request [:body :modify])
-        [success err] (protect (task/modify uuid modify-string))]
+        referer       (get-in request [:headers "Referer"])
+        due           (get-in request [:body :due])
+        scheduled     (get-in request [:body :scheduled])
+        # project       (get-in request [:body :project]) TODO
+        [success err] (protect (cond
+                                 (not (nil? modify-string)) (task/modify-custom-string uuid modify-string)
+                                 (task/modify uuid scheduled due)))]
     (if success
-      (redirect-to :home)
+      (url-redirect referer) # Redirect back to where you came from
       (redirect-to :error-page {:? {:reason (string "could not modify item: " err)}}))))
 
 (defn add [request]
@@ -220,32 +235,31 @@
 
 (defn modify [request]
   (let [uuid  (get-in request [:params :uuid])
-        [success v] (protect (task/get-item uuid))]
+        [success v] (protect (task/get-item uuid))
+        id (string "modify-" uuid)
+        path (string "/modify/" uuid)]
     (if (not success) (redirect-to :error-page {:? {:reason v}})
-      (let [desc (get v :description)
-            p (get v :project)
-            u (get v :urgency)
-            recur (get v :recur)
-            sch (get v :scheduled)
-            t (get v :tags)
-            due (get v :due)]
-        [:main {:class "container"}
-          (navbar)
-          [:h4 desc]
-          [:a {:href (string "/delete/" uuid)
-                :role "button"
-                :style "float: right"
-                :class "secondary"} "delete"]
-          [:ul
-            [:li (string "project: " p)]
-            [:li (string "urgency: " (math/floor u))]
-            [:li (string "recur: " recur)]
-            [:li (string "scheduled: " (display-time sch))]
-            [:li (string "tags: " (show-tags t))]
-            [:li (string "due: " (display-time due))]]
-          [:form {:action (string "/modify/" uuid) :method "post"}
-            [:input {:type "text" :name "modify"} ""]
-            [:button {:type "submit"} "Modify"]]]))))
+      [:main {:class "container"}
+        (navbar)
+        [:h4 (v :description)]
+        [:a {:href (string "/delete/" uuid)
+              :role "button"
+              :style "float: right"
+              :class "secondary"} "delete"]
+        [:ul
+          [:li (string "project: " (v :project))]
+          [:li (string "urgency: " (math/floor (v :urgency)))]
+          [:li (string "recur: " (v :recur))]
+          [:li (string "scheduled: " (display-time (v :scheduled)))]
+          [:li (string "tags: " (show-tags (v :tags)))]
+          [:li (string "due: " (display-time (v :due)))]]
+        [:form {:action path :method "post" :id id}
+          (date-picker "scheduled" (v :scheduled))
+          (date-picker "due" (v :due))
+          (project-picker (v :project))
+          (custom-input-button id)
+          [:br]
+          [:button {:type "submit"} "Modify"]]])))
 
 (defn delete [request]
   (let [uuid        (get-in request [:params :uuid])
