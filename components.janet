@@ -25,10 +25,14 @@
   Pick a date from some common options.
 
   Should be used inside a form, as it will populate an input field.
+
+  current-date could be nil, in which case the current date will be used.
   """
   (let [{:month-day d
          :month m
-         :year y} (os/date (time/parse "%Y%m%dT%H%M%S%z" current-date "UTC") :local)
+         :year y} (cond
+                    (nil? current-date) (os/date (os/time) :local)
+                    (os/date (time/parse "%Y%m%dT%H%M%S%z" current-date "UTC") :local))
         current (string y "-" (with-zero (+ 1 m)) "-" (with-zero (+ 1 d)))
         min-date (string y "-01-01")
         max-date (string y "-12-31")]
