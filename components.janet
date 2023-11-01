@@ -41,7 +41,7 @@
      [:input {:type "date"
               :id name
               :name name
-              :value current
+              :value (if (nil? current-date) "" current)
               :min min-date
               :max max-date}]]))
 
@@ -56,8 +56,8 @@
     [:button {:type "submit"} "Modify"]))
 
 (defn custom-input-button [id]
-  [:button {:class "custom-input-button"
-            :style "float: right; width: 200px; font-size: 12px"
+  [:button {:class "secondary"
+            :style "float: left; width: 200px; font-size: 12px;"
             :hx-get "/components/custom-input-button"
             :hx-target (string "#" id)
             :hx-swap "innerHTML"}

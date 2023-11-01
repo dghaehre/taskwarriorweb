@@ -241,11 +241,11 @@
     (if (not success) (redirect-to :error-page {:? {:reason v}})
       [:main {:class "container"}
         (navbar)
-        [:h4 (v :description)]
         [:a {:href (string "/delete/" uuid)
               :role "button"
               :style "float: right"
               :class "secondary"} "delete"]
+        [:h4 (v :description)]
         [:ul
           [:li (string "project: " (v :project))]
           [:li (string "urgency: " (math/floor (v :urgency)))]

@@ -44,7 +44,8 @@
   ($ task ,uuid mod ,modify-string))
 
 (defn modify [uuid scheduled due]
-  (error "TODO"))
+  (modify-custom-string uuid (string "scheduled:" scheduled))
+  (modify-custom-string uuid (string "due:" due)))
 
 (defn add [description]
   (default description "")
