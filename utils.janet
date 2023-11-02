@@ -65,3 +65,18 @@
 
 (test (get-root-projects [{:project "a.b.c"} {:project "a.b.d"} {:project "hei.sdf"}]) @["a" "hei"])
 (test (get-root-projects []) @[])
+
+
+(defmacro meach [index arr & body]
+  """
+  As I would expect each to behave, not returning nil
+  """
+  ~(map (fn [,index] (do
+                       ,;body)) ,arr))
+
+(comment
+  (macex '(meach x @[1 2 3]
+            (def y x)
+            (+ 1 y))))
+
+(test (meach x @[1 2 3] (+ 1 x)) @[2 3 4])

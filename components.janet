@@ -1,20 +1,29 @@
 (use joy)
 (use time)
 (use ./utils)
+(import ./taskwarrior :as task)
 
 
 #####################
 #   Project picker  #
 #####################
 
-(defn project-picker [current]
+(defn project-picker [&opt current]
   """
+  current: string
+  example: \"arch.testing\"
+
   Pick a project from a list of projects.
 
   Should be used inside a form, as it will populate an input field.
   """
-  [:p "project: (TODO)"])
-
+  (default current "")
+  (let [current-projects (string/split "." current)
+        projects (task/get-next-level-projects current)]
+    [[:div (meach p current-projects
+            [:button p])]
+     [:div (meach p projects
+             [:button p])]]))
 
 ##################
 #   Date picker  #

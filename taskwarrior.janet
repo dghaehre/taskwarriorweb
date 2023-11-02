@@ -1,6 +1,7 @@
 (use sh)
 (import json)
 (use time)
+(use judge)
 
 (defn keyword-keys [m]
   "Make all keys in a map keywords"
@@ -91,8 +92,64 @@
 #     # (if (nil? prefix) projects
 #     #    (-> (filter |(string/has-prefix? prefix $) projects)))))
 
+(defn remove-duplicate [acc x]
+  (if (= (last acc) x) acc
+    (array/push acc x)))
+
+(defn- get-level [prefix]
+  (cond
+   (= "" prefix) 0
+   (->> (string/trim prefix ".")
+        (string/find-all ".")
+        (length)
+        (+ 1))))
+
+(test (get-level "") 0)
+(test (get-level "arch") 1)
+(test (get-level "arch.tst") 2)
+(test (get-level "arch.tst.") 2)
+
+(defn- format-by-level [str level]
+  (-> (string/split "." str)
+      (get level)))
+
+(test (format-by-level "arch" 0) "arch")
+(test (format-by-level "arch.test" 1) "test")
+(test (format-by-level "arch.test.ing" 1) "test")
+(test (format-by-level "arch.test.ing" 2) "ing")
+(test (format-by-level "arch" 2) nil)
+
+
+(defn get-next-level-projects [&opt prefix]
+  """
+  Returns a lists of projects for the next 'level'
+  given the prefix
+  """
+  (default prefix "")
+  (def level (get-level prefix))
+  (->> ($< task "(status:pending or end:-365d)" _unique project)
+       (string/split "\n")
+
+       # Remove empty stuff
+       (filter |(not (empty? $)))
+
+       # Filter on prefix
+       (filter |(string/has-prefix? prefix $))
+
+       # Format to get correct level
+       (map |(format-by-level $ level))
+
+       # Remove duplicates
+       (sort)
+       (reduce remove-duplicate @[])
+
+       # Remove empty stuff
+       (filter |(not (empty? $)))))
+
+
 (comment
 
+  (get-next-level-projects "arch.learning")
 
   # (get-projects)
 
