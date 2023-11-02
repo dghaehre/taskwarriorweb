@@ -271,9 +271,10 @@
 
 (defn complete [request]
   (let [uuid        (get-in request [:params :uuid])
+        referer     (get-in request [:headers "Referer"])
         [success v] (protect (task/complete uuid))]
     (if success
-      (redirect-to :home)
+      (url-redirect referer) # Redirect back to where you came from
       (redirect-to :error-page {:? {:reason v}}))))
 
 (defn error-page [request]
