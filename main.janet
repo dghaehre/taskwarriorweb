@@ -45,6 +45,7 @@
 
 # components
 (route :get "/components/custom-input-button" custom-input-button-handler)
+(route :get "/components/project-picker/:project" project-picker-handler)
 
 (defn display-project [p]
   (default p "")
@@ -218,10 +219,10 @@
         referer       (get-in request [:headers "Referer"])
         due           (get-in request [:body :due])
         scheduled     (get-in request [:body :scheduled])
-        # project       (get-in request [:body :project]) TODO
+        project       (get-in request [:body :project])
         [success err] (protect (cond
                                  (not (nil? modify-string)) (task/modify-custom-string uuid modify-string)
-                                 (task/modify uuid scheduled due)))]
+                                 (task/modify uuid scheduled due project)))]
     (if success
       (url-redirect referer) # Redirect back to where you came from
       (redirect-to :error-page {:? {:reason (string "could not modify item: " err)}}))))
@@ -257,6 +258,7 @@
           (date-picker "scheduled" (v :scheduled))
           (date-picker "due" (v :due))
           (project-picker (v :project))
+          [:br]
           (custom-input-button id)
           [:br]
           [:button {:type "submit"} "Modify"]]])))

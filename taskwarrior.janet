@@ -44,9 +44,10 @@
 (defn modify-custom-string [uuid modify-string]
   ($ task ,uuid mod ,modify-string))
 
-(defn modify [uuid scheduled due]
+(defn modify [uuid scheduled due project]
   (modify-custom-string uuid (string "scheduled:" scheduled))
-  (modify-custom-string uuid (string "due:" due)))
+  (modify-custom-string uuid (string "due:" due))
+  (modify-custom-string uuid (string "project:" project)))
 
 (defn add [description]
   (default description "")
@@ -120,6 +121,8 @@
 (test (format-by-level "arch" 2) nil)
 
 
+# TODO(optimize): Dong call taskwarrior everytime calling this function.
+#                 Instead, call it once and store the result in a dyn :all-projects
 (defn get-next-level-projects [&opt prefix]
   """
   Returns a lists of projects for the next 'level'

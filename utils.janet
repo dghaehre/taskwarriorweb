@@ -67,6 +67,7 @@
 (test (get-root-projects []) @[])
 
 
+# TODO(refactor): use catseq isntead of meach
 (defmacro meach [index arr & body]
   """
   As I would expect each to behave, not returning nil

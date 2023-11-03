@@ -1,12 +1,16 @@
 (use joy)
 (use time)
 (use ./utils)
+(use judge)
 (import ./taskwarrior :as task)
 
 
 #####################
 #   Project picker  #
 #####################
+
+(def button-div-style "display: flex; flex-wrap: wrap; justify-content: flex-start;")
+(def button-style "padding: 8px 30px; flex: none; width: auto; margin-right: 5px;")
 
 (defn project-picker [&opt current]
   """
@@ -18,12 +22,40 @@
   Should be used inside a form, as it will populate an input field.
   """
   (default current "")
-  (let [current-projects (string/split "." current)
+  (let [current-projects (->> (string/split "." current)
+                              (filter |(not (empty? $))))
         projects (task/get-next-level-projects current)]
-    [[:div (meach p current-projects
-            [:button p])]
-     [:div (meach p projects
-             [:button p])]]))
+    [:div {:id "project-picker"}
+     [:input {:type "hidden" :name "project" :value current}]
+     [:p (string "Project: " current)]
+
+     # Subtracting sub project
+     [:div {:style button-div-style}
+        (meach p current-projects
+         [:button {:class "primary"
+                   :style button-style
+                   :hx-get (string "/components/project-picker/" (-> (take-until |(= p $) current-projects)
+                                                                     (string/join ".")))
+                   :hx-target "#project-picker"
+                   :hx-trigger "click"} p])]
+
+     # Adding sub project
+     [:div {:style button-div-style}
+        (meach p projects
+         [:button {:class "secondary"
+                   :style button-style
+                   :hx-get (string "/components/project-picker/" (cond 
+                                                                   (= "" current) p
+                                                                   (string current "." p)))
+                   :hx-target "#project-picker"
+                   :hx-trigger "click"} p])]]))
+
+(defn project-picker-handler [req]
+  (let [project (get-in req [:params :project])]
+    (text/html
+      (project-picker project))))
+
+    
 
 ##################
 #   Date picker  #
