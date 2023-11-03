@@ -2,6 +2,7 @@
 (import json)
 (use time)
 (use judge)
+(use joy)
 
 (defn keyword-keys [m]
   "Make all keys in a map keywords"
@@ -113,14 +114,18 @@
 
 # TODO(optimize): Dong call taskwarrior everytime calling this function.
 #                 Instead, call it once and store the result in a dyn :all-projects
-(defn get-next-level-projects [&opt prefix]
+(defn get-next-level-projects [prefix & flags]
   """
   Returns a lists of projects for the next 'level'
   given the prefix
+
+  flags: :only-pending
   """
   (default prefix "")
   (def level (get-level prefix))
-  (->> ($< task "(status:pending or end:-365d)" _unique project)
+  (def only-pending (contains? flags :only-pending))
+  (def filter-string (if only-pending "(status:pending)" "(status:pending or end:-365d)"))
+  (->> ($< task ,filter-string _unique project)
        (string/split "\n")
 
        # Remove empty stuff

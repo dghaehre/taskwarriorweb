@@ -252,7 +252,7 @@
           [:li (string "recur: " (v :recur))]
           [:li (string "tags: " (show-tags (v :tags)))]]
         [:form {:action path :method "post" :id id}
-          (project-picker (v :project))
+          (project-picker (get v :project ""))
           (date-picker "scheduled" (v :scheduled))
           (date-picker "due" (v :due))
           [:br]
@@ -321,7 +321,7 @@
             :method "post"
             :hx-post "/search"
             :hx-target "#search-results"}
-      (project-picker)
+      (project-picker "" :only-pending)
       [:input {:hx-post "/search"
                :name "search"
                :hx-trigger "keyup changed delay:500ms, search" 

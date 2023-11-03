@@ -12,7 +12,7 @@
 (def button-div-style "display: flex; flex-wrap: wrap; justify-content: flex-start;")
 (def button-style "padding: 8px 30px; flex: none; width: auto; margin-right: 5px;")
 
-(defn project-picker [&opt current]
+(defn project-picker [current & flags]
   """
   current: string
   example: \"arch.testing\"
@@ -20,11 +20,14 @@
   Pick a project from a list of projects.
 
   Should be used inside a form, as it will populate an input field.
+
+  optional flags: :only-pending
   """
-  (default current "")
-  (let [current-projects (->> (string/split "." current)
+  (let [only-pending     (if (empty? flags) false (contains? :only-pending flags))
+        current-projects (->> (string/split "." current)
                               (filter |(not (empty? $))))
-        projects (task/get-next-level-projects current)]
+        projects         (task/get-next-level-projects current)
+        flags-query      (if (empty? flags) "" (string "?flags=" (string/join (map string flags) ",")))]
     [:div {:id "project-picker"}
      [:input {:type "hidden" :name "project" :value current}]
      [:p (string "Project: " current)]
@@ -36,7 +39,7 @@
                    :style button-style
                    :hx-get (string "/components/project-picker/" (-> (take-until |(= p $) current-projects)
                                                                      (string/join ".")
-                                                                     (http/url-encode)))
+                                                                     (http/url-encode)) flags-query)
                    :hx-target "#project-picker"
                    :hx-trigger "click"} p])]
 
@@ -48,18 +51,21 @@
                    :hx-get (string "/components/project-picker/" (-> (cond
                                                                        (= "" current) p
                                                                        (string current "." p))
-                                                                     (http/url-encode)))
+                                                                     (http/url-encode)) flags-query)
                    :hx-target "#project-picker"
                    :hx-trigger "click"} p])]]))
 
 (defn project-picker-handler [req]
-  (let [project (get-in req [:params :project])]
+  (let [project (get-in req [:params :project])
+        flags   (get-in req [:query-string :flags] "")]
     (text/html
-      (project-picker (http/url-decode project)))))
+      (project-picker (http/url-decode project) ;(map keyword (string/split "," flags))))))
+
 
 (comment
-  (let [k "arch.kjøkken"]
-    (http/url-encode k)))
+  (def flags [:only-pending])
+
+  (if (empty? flags) "" (string "?flags=" (string/join (map string flags) ","))))
     
 
 ##################
