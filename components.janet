@@ -35,7 +35,8 @@
          [:button {:class "primary"
                    :style button-style
                    :hx-get (string "/components/project-picker/" (-> (take-until |(= p $) current-projects)
-                                                                     (string/join ".")))
+                                                                     (string/join ".")
+                                                                     (http/url-encode)))
                    :hx-target "#project-picker"
                    :hx-trigger "click"} p])]
 
@@ -44,9 +45,10 @@
         (meach p projects
          [:button {:class "secondary"
                    :style button-style
-                   :hx-get (string "/components/project-picker/" (cond 
-                                                                   (= "" current) p
-                                                                   (string current "." p)))
+                   :hx-get (string "/components/project-picker/" (-> (cond
+                                                                       (= "" current) p
+                                                                       (string current "." p))
+                                                                     (http/url-encode)))
                    :hx-target "#project-picker"
                    :hx-trigger "click"} p])]]))
 
@@ -55,6 +57,9 @@
     (text/html
       (project-picker project))))
 
+(comment
+  (let [k "arch.kjøkken"]
+    (http/url-encode k)))
     
 
 ##################
