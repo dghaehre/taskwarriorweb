@@ -55,7 +55,7 @@
 (defn project-picker-handler [req]
   (let [project (get-in req [:params :project])]
     (text/html
-      (project-picker project))))
+      (project-picker (http/url-decode project)))))
 
 (comment
   (let [k "arch.kjøkken"]
