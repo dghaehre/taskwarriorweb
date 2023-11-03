@@ -255,9 +255,9 @@
           [:li (string "tags: " (show-tags (v :tags)))]
           [:li (string "due: " (display-time (v :due)))]]
         [:form {:action path :method "post" :id id}
+          (project-picker (v :project))
           (date-picker "scheduled" (v :scheduled))
           (date-picker "due" (v :due))
-          (project-picker (v :project))
           [:br]
           (custom-input-button id)
           [:br]

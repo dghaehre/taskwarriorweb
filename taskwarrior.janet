@@ -83,19 +83,6 @@
        (map keyword-keys)
        (group-by-days)))
 
-# (defn get-projects [&opt prefix]
-#   (let [level (if (nil? prefix) 0
-#                   (length (string/find-all "." prefix)))
-#         projects (->> ($< task _unique project)
-#                       (string/split "\n")
-#                       (filter |(not (empty? $))))
-#         filtered (if (nil? prefix) projects
-#                      (-> (filter |(string/has-prefix? prefix $) projects)))]
-#     (->> filtered
-#          (map |(get (string/split "." $) level)))))
-#     # (if (nil? prefix) projects
-#     #    (-> (filter |(string/has-prefix? prefix $) projects)))))
-
 (defn remove-duplicate [acc x]
   (if (= (last acc) x) acc
     (array/push acc x)))
