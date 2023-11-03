@@ -15,8 +15,11 @@
         json (json/decode output)]
     (map keyword-keys json)))
 
-(defn search [s]
-  (let [output ($< task status:pending rc.context=none ,s export)
+(defn search [s &opt project]
+  (default project "")
+  (let [project-search (if (= "" project) ""
+                         (string "pro:" project))
+        output ($< task status:pending rc.context=none ,s ,project-search export)
         json (json/decode output)]
     (map keyword-keys json)))
 

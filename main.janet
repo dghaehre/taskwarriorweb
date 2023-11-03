@@ -310,7 +310,8 @@
 
 (defn search-results [request]
   (let [s (get-in request [:body :search])
-        [success v] (protect (task/search s))]
+        p (get-in request [:body :project])
+        [success v] (protect (task/search s p))]
     (if (not success)
       [:p (string "ERROR: " v)]
       [[:p (string "showing: " (length v))
@@ -319,11 +320,17 @@
 (defn search [request]
   [:main {:class "container"}
     (navbar)
-    [:input {:hx-post "/search"
-             :name "search"
-             :hx-trigger "keyup changed delay:500ms, search" 
-             :hx-target "#search-results"}]
-    [:div {:id "search-results"}]])
+    [:form {:action "/search"
+            :method "post"
+            :hx-post "/search"
+            :hx-target "#search-results"}
+      (project-picker)
+      [:input {:hx-post "/search"
+               :name "search"
+               :hx-trigger "keyup changed delay:500ms, search" 
+               :hx-target "#search-results"}]
+      [:button {:type "submit"} "Search"]
+      [:div {:id "search-results"}]]])
 
 (defn summary-table [items]
   (let [projects (get-root-projects items)]
