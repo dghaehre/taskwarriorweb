@@ -248,12 +248,9 @@
               :class "secondary"} "delete"]
         [:h4 (v :description)]
         [:ul
-          [:li (string "project: " (v :project))]
           [:li (string "urgency: " (math/floor (v :urgency)))]
           [:li (string "recur: " (v :recur))]
-          [:li (string "scheduled: " (display-time (v :scheduled)))]
-          [:li (string "tags: " (show-tags (v :tags)))]
-          [:li (string "due: " (display-time (v :due)))]]
+          [:li (string "tags: " (show-tags (v :tags)))]]
         [:form {:action path :method "post" :id id}
           (project-picker (v :project))
           (date-picker "scheduled" (v :scheduled))
