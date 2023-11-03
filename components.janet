@@ -74,17 +74,13 @@
          :year y} (cond
                     (nil? current-date) (os/date (os/time) :local)
                     (os/date (time/parse "%Y%m%dT%H%M%S%z" current-date "UTC") :local))
-        current (string y "-" (with-zero (+ 1 m)) "-" (with-zero (+ 1 d)))
-        min-date (string y "-01-01")
-        max-date (string y "-12-31")]
+        current (string y "-" (with-zero (+ 1 m)) "-" (with-zero (+ 1 d)))]
     [:div
      [:label {:for name} (string name ":")]
      [:input {:type "date"
               :id name
               :name name
-              :value (if (nil? current-date) "" current)
-              :min min-date
-              :max max-date}]]))
+              :value (if (nil? current-date) "" current)}]]))
 
 
 ##########################
