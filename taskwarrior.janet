@@ -155,8 +155,6 @@
 
   (search "pro:arch test")
 
-  (def i @{:description "Support currency from portal" :end "20230922T073356Z" :entry "20230914T075559Z" :id 0 :modified "20230922T073358Z" :project "vipps.beompenger.notification-service" :status "deleted" :test "sdfsdf" :urgency 1.04384 :uuid "329f56a3-ce3b-4e33-947f-0b0bd670b08a"})
-
   (length (get-last-seven-days))
   (get-today)
   (get-item "0565502a-7329-4786-a919-7649c5")
