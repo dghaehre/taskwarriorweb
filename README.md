@@ -1,6 +1,6 @@
 # A Taskwarrior web app
 
-!(screenshot)[./screenshot.png]
+![screenshot](./screenshot.png)
 
 This is a very opinionated frontend for taskwarrior. This is built for me, but if you like it, feel free to use it.
 
@@ -8,7 +8,7 @@ Its reason for existing is that I wanted a simple way to edit taskwarrior tasks 
 
 -----
 
-Some specifcs you might want to know about:
+Some specifics you might want to know about:
 
 ## Janet
 
