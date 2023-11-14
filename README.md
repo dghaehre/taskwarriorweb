@@ -1,6 +1,8 @@
 # A Taskwarrior web app
 
-![](./screenshot.png | width=300)
+![](./screenshot.png)
+
+<img src="./screenshot.png" alt="screenshot" width="300px" />
 
 This is a very opinionated frontend for taskwarrior. This is built for me, but if you like it, feel free to use it.
 
