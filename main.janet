@@ -28,10 +28,6 @@
 
 # Routes
 (route :get "/" :home)
-(route :get "/git-status" :git-status)
-(route :post "/git-pull" :git-pull)
-(route :post "/git-force-pull" :git-force-pull)
-(route :post "/git-push" :git-push)
 (route :get "/get-content" :content)
 (route :get "/complete/:uuid" :complete)
 (route :get "/modify/:uuid" :modify)
@@ -196,8 +192,6 @@
         inbox (task/get-inbox)
         done  (task/get-done-today)]
     [:div {:id "content"}
-      (git-status-wrapper
-         (git/show-status git-status))
       # Today
       [:h4 "Today"
         [:span {:style "font-size: 12px; margin-left: 10px;"}
@@ -221,7 +215,9 @@
         scheduled     (get-in request [:body :scheduled])
         project       (get-in request [:body :project])
         [success err] (protect (cond
-                                 (not (nil? modify-string)) (task/modify-custom-string uuid modify-string)
+                                 (not (nil? modify-string)) (do
+                                                              (task/modify-custom-string uuid modify-string)
+                                                              (task/sync))
                                  (task/modify uuid scheduled due project)))]
     (if success
       (url-redirect referer) # Redirect back to where you came from
@@ -357,23 +353,6 @@
     (navbar)
     (show-tasks)
     (add-modal)])
-
-(defn git-status [request]
-  (-> (git/get-status)
-      (git/show-status)
-      (protect-error-page)))
-
-(defn git-pull [request]
-  (protect-error-page (git/pull-changes))
-  (show-tasks (git/get-status)))
-
-(defn git-force-pull [request]
-  (protect-error-page (git/force-pull-changes))
-  (show-tasks (git/get-status)))
-
-(defn git-push [request]
-  (protect-error-page (git/push-changes))
-  (show-tasks (git/get-status)))
 
 # Middleware
 (def app (-> (handler)

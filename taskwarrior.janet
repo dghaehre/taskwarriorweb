@@ -27,17 +27,23 @@
 (comment
   (search "pro:arch test"))
 
+(defn sync []
+  ($ task rc.confirmation=off sync))
+
 (defn get-inbox []
+  (sync)
   (let [output ($< task status:pending rc.context=none pro: export)
         json (json/decode output)]
     (map keyword-keys json)))
 
 (defn get-done-today []
+  (sync)
   (let [output ($< task status:completed rc.context=none end.after:tod export)
         json (json/decode output)]
     (map keyword-keys json)))
 
 (defn get-item [uuid]
+  (sync)
   (let [[success output] (protect ($< task ,uuid export))]
     (if (not success) (error (string "no item found: " output))
       (let [json (json/decode output)
@@ -51,18 +57,24 @@
 (defn modify [uuid scheduled due project]
   (modify-custom-string uuid (string "scheduled:" scheduled))
   (modify-custom-string uuid (string "due:" due))
-  (modify-custom-string uuid (string "project:" project)))
+  (modify-custom-string uuid (string "project:" project))
+  (sync))
 
 (defn add [description]
   (default description "")
   (if (= "" description) (error "no description given")
-    ($ task rc.context=none add ,description)))
+    (do
+      ($ task rc.context=none add ,description)
+      (sync))))
+    
 
 (defn complete [uuid]
-  ($ task done ,uuid))
+  ($ task done ,uuid)
+  (sync))
 
 (defn delete [uuid]
-  ($ task rc.confirmation=off rm ,uuid))
+  ($ task rc.confirmation=off rm ,uuid)
+  (sync))
 
 # Broken at year boundaries
 # Is based on :year-day
