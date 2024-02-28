@@ -54,13 +54,22 @@
 (test (time/parse "%Y%m%dT%H%M%S%z" "20230913T174428Z") 1694619868)
 (test (display-time "") "")
 
+(defn sort-urgency [items]
+  (sorted-by |(- (get $ :urgency)) items))
+
+(comment
+  (let [x -10]
+    (- x)))
+
+(defn get-root-project [item]
+  (as-> (get item :project "") _
+        (string/split "." _)
+        (get _ 0)))
+
 (defn get-root-projects [items]
   (var projects @{})
   (each i items
-    (let [root (as->  (get i :project "") _
-                      (string/split "." _)
-                      (get _ 0))]
-     (put projects root true)))
+   (put projects (get-root-project i) true))
   (keys projects))
 
 (test (get-root-projects [{:project "a.b.c"} {:project "a.b.d"} {:project "hei.sdf"}]) @["a" "hei"])

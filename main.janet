@@ -186,11 +186,16 @@
     [:li [:a {:href "/search" :class "secondary"} "search"]]
     [:li [:a {:href "/" :class "secondary"} "home"]]]])
 
+(defn group-by-project [items]
+  (group-by (fn [item] (get-root-project item)) items))
+
 (defn show-tasks [&opt git-status]
   (default git-status {:load? true})
   (let [today (task/get-today)
         inbox (task/get-inbox)
-        done  (task/get-done-today)]
+        done  (task/get-done-today)
+        grouped (->> (group-by-project today)
+                     (map |(sort-urgency $)))]
     [:div {:id "content"}
       # Today
       [:h4 "Today"
@@ -200,7 +205,8 @@
       (when (not (= (length inbox) 0))
         [[:h4 "Inbox"]
          (to-table-mobile-inbox inbox)])
-      (to-table-mobile today)]))
+      (seq [list :in grouped]
+        (to-table-mobile list))]))
 
 (defn modify-post [request]
   """
