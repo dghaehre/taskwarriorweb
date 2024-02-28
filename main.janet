@@ -310,7 +310,7 @@
 (defn search-results [request]
   (let [s (get-in request [:body :search])
         p (get-in request [:body :project])
-        [success v] (protect (task/search s p))]
+        [success v] (protect (-> (task/search s p) (sort-urgency)))]
     (if (not success)
       [:p (string "ERROR: " v)]
       [[:p (string "showing: " (length v))
