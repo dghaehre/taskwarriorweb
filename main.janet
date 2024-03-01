@@ -7,6 +7,8 @@
 (import ./git :as git)
 (use time)
 
+# (os/time) since last time we synced with the task-server
+(var last-synced nil)
 
 # Layout
 (defn app-layout [{:body body :request request}]
@@ -178,13 +180,16 @@
       [:tbody rows]]))
 
 (defn navbar []
-  [:nav
-   [:ul
-    [:li ""]]
-   [:ul
-    [:li [:a {:href "/completed" :class "secondary"} "completed"]]
-    [:li [:a {:href "/search" :class "secondary"} "search"]]
-    [:li [:a {:href "/" :class "secondary"} "home"]]]])
+  (let [synced (if (nil? last-synced) ""
+                 (let [seconds (- (os/time) last-synced)]
+                   (string "synced " seconds "s ago")))]
+    [:nav
+     [:ul
+      [:li {:style "color: grey; padding-top: 0px; font-size: 11px;" } [:small synced]]]
+     [:ul
+      [:li [:a {:href "/completed" :class "secondary"} "completed"]]
+      [:li [:a {:href "/search" :class "secondary"} "search"]]
+      [:li [:a {:href "/" :class "secondary"} "home"]]]]))
 
 (defn group-by-project [items]
   (group-by (fn [item] (get-root-project item)) items))
@@ -374,10 +379,20 @@
              (not-found)
              (logger)))
 
+(defn background-sync-server []
+  "A background job that syncs with the task-server every minute"
+  (print "Starting background job")
+  (defn job []
+    (forever
+      (task/sync)
+      (set last-synced (os/time))
+      (ev/sleep 60)))
+  (ev/go job))
 
 # Server
 (defn main [& args]
   (let [port (get args 1 (os/getenv "PORT" "9001"))
         host (get args 2 (os/getenv "HOST" "localhost"))]
     (print "Starting server on " host ":" port)
+    (background-sync-server)
     (server app port host)))
