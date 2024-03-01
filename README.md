@@ -16,17 +16,15 @@ Its a web server written in [Janet](https://janet-lang.org/), and uses [htmx](ht
 
 Janet is very easy to install and use, and is a [joy](https://joy.swlkr.com/) to work with. I highly recommend it. This currently runs on my raspberry pi in my closet behind a tailscale vpn, and it works great.
 
-## Git
+## Taskserver / Git
 
-It uses `git` as the "sync" tool, instead of taskwarrior's built in sync with a taskserver. It currently expects the taskwarrior data to be in a git repo at ~/.task.
-
-You have to push the "pull" or "push" button on the home page for changes to be synced to/from the git repo.
+This project used to use git for syncing tasks, but now it uses taskserver. The git syncing code is still present, but it is not used. I found git syncing to be too slow, and even though setting up a taskserver is a pain it makes the use of this app a lot easier.
 
 ## Home page
 
 The home page exists of 2 sections:
 - *Inbox* Every task that is not given a project will be present on the home page in the "inbox" section.
-- *Today* Tasks that I have scheduled for today or is soon due will be present in the "today" section.
+- *Today* Tasks that I have scheduled for today or is soon due will be present in the "today" section. It is grouped by root project.
 
 -----------
 
