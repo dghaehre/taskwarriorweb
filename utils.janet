@@ -75,6 +75,8 @@
 (test (get-root-projects [{:project "a.b.c"} {:project "a.b.d"} {:project "hei.sdf"}]) @["a" "hei"])
 (test (get-root-projects []) @[])
 
+(defmacro silent [body]
+  ~(try ,body ([_] nil)))
 
 # TODO(refactor): use catseq isntead of meach
 (defmacro meach [index arr & body]

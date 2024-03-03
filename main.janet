@@ -384,9 +384,10 @@
   (print "Starting background job")
   (defn job []
     (forever
-      (task/sync)
-      (set last-synced (os/time))
-      (ev/sleep 60)))
+      (silent
+        (task/sync)
+        (set last-synced (os/time))
+        (ev/sleep 60))))
   (ev/go job))
 
 # Server
