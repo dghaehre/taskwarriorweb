@@ -385,9 +385,10 @@
   (defn job []
     (forever
       (silent
-        (task/sync)
-        (set last-synced (os/time))
-        (ev/sleep 60))))
+        (do
+          (task/sync)
+          (set last-synced (os/time))
+          (ev/sleep 60)))))
   (ev/go job))
 
 # Server
