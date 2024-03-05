@@ -21,7 +21,7 @@
       (htmx-redirect :error-page {:? {:reason v}}))))
 
 (defn is-project? [item name]
-  (let [project (get item :project)]
+  (let [project (get item :project "")]
     (string/has-prefix? name project)))
 
 (defn exist? [x]
