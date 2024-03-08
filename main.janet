@@ -394,7 +394,7 @@
   (try
     (let [port (get args 1 (os/getenv "PORT" "9001"))
           host (get args 2 (os/getenv "HOST" "localhost"))]
-      (background-job sync-job 2)
+      (background-job sync-job 60)
       (print "Starting server on " host ":" port)
       (server app port host))
     ([err _] (print "uncaught error: " err))))
