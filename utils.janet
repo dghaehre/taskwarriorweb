@@ -78,6 +78,22 @@
 (defmacro silent [body]
   ~(try ,body ([_] nil)))
 
+# Should never return error!
+(defn background-job [f seconds]
+  (defn job []
+    (forever
+      (defer (ev/sleep seconds)
+        (silent (f)))))
+  (ev/go job))
+
+
+(comment
+  (defn testing []
+    (print "testing"))
+
+  (background-job testing 1))
+  
+
 # TODO(refactor): use catseq isntead of meach
 (defmacro meach [index arr & body]
   """

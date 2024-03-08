@@ -379,22 +379,19 @@
              (not-found)
              (logger)))
 
-(defn background-sync-server []
+(defn sync-job []
   "A background job that syncs with the task-server every minute"
-  (print "Starting background job")
-  (defn job []
-    (forever
-      (defer (ev/sleep 60)
-        (silent
-          (do
-            (task/sync)
-            (set last-synced (os/time)))))))
-  (ev/go job))
+  (task/sync)
+  (set last-synced (os/time)))
 
 # Server
 (defn main [& args]
-  (let [port (get args 1 (os/getenv "PORT" "9001"))
-        host (get args 2 (os/getenv "HOST" "localhost"))]
-    (print "Starting server on " host ":" port)
-    (background-sync-server)
-    (server app port host)))
+  (try
+    (let [port (get args 1 (os/getenv "PORT" "9001"))
+          host (get args 2 (os/getenv "HOST" "localhost"))]
+      (background-job sync-job 2)
+      (print "Starting server on " host ":" port)
+      (server app port host))
+    ([err _] (print "uncaught error: " err))))
+
+   
