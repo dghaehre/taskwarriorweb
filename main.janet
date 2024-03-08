@@ -111,7 +111,7 @@
                          [:td desc]
                          [:td {:style "white-space: pre-line"} (display-project p)]
                          (when show-urgency
-                           [:td (math/floor u)])])
+                           [:td {:style "text-align: right;"} (math/floor u)])])
                   items)
 
           modals (map (fn [{:description desc
@@ -153,14 +153,19 @@
                                         :role "button"
                                         :class "primary"} "Complete"]])]])
                       items)]
-    [[:table {:role "grid"}
-       [:thead
-        [:tr
-          [:th (if show-header "Description" "")]
-          [:th (if show-header "Project" "")]
-          (when (and show-urgency show-header)
-            [:th ""])]]
-       [:tbody rows]
+    [[:table {:role "grid" :style "width: 100%; margin-bottom: 0px;"}
+      [:colgroup
+        [:col {:span "1" :style "width: 80%;"}]
+        [:col {:span "1" :style "width: 10%;"}]
+        (when (and show-urgency show-header) # ah fack
+          [:col {:span "1" :style "width: 10%;"}])]
+      [:thead
+       [:tr
+         [:th (if show-header "Description" "")]
+         [:th (if show-header "Project" "")]
+         (when (and show-urgency show-header)
+           [:th ""])]]
+      [:tbody rows]
       modals]]))
 
 (defn to-table-mobile-inbox [items]
@@ -202,16 +207,16 @@
         grouped (->> (group-by-project today)
                      (map |(sort-urgency $)))]
     [:div {:id "content"}
-      # Today
-      [:h4 "Today"
-        [:span {:style "font-size: 12px; margin-left: 10px;"}
-          (string (length done) "/" (+ (length today) (length done)))]]
       # Inbox
       (when (not (= (length inbox) 0))
         [[:h4 "Inbox"]
          (to-table-mobile-inbox inbox)])
+      # Today
+      [:h4 "Today"
+        [:span {:style "font-size: 12px; margin-left: 10px;"}
+          (string (length done) "/" (+ (length today) (length done)))]]
       (seq [list :in grouped]
-        (to-table-mobile list))]))
+        (to-table-mobile list {:show-header false}))]))
 
 (defn modify-post [request]
   """
