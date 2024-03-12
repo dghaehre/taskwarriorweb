@@ -67,25 +67,131 @@
 (defn delete [uuid]
   ($ task rc.confirmation=off rm ,uuid))
 
+(defn add-missing-days [today-day items]
+  (assert (number? today-day) "expected today-day to be a number")
+  (assert (>= 7 (length items)) (string "expected items to be equal or less than 7 days, got: " (length items) " days"))
+  (let [days (->> (map |(get (get $ 0) :day) items)
+                  (filter |(not (nil? $))))
+        missing-days (->> (range today-day (- today-day 7) -1)
+                          (filter |(not (contains? $ days)))
+                          (map (fn [x] @[{:day x}])))
+        res (array/concat items missing-days)]
+    (assert (= 7 (length res)) (string "expected 7 days, got " (length res) " days"))
+    res))
+
+(defn add-day-from-end [i]
+  """
+  Add :day that is amount of days since today
+  """
+  (assert (string? (get i :end)) "expected :end as string in item")
+  (as-> (get i :end) _
+        (time/parse "%Y%m%dT%H%M%S%z" _ "EUROPE/OSLO")
+        (os/date _ :local)
+        (get _ :year-day)
+        (merge {:day _} i)))
+
+(defn valid-day? [i today-day]
+  """
+  Check if :day is within 7 days
+
+  Still broken at year boundaries...
+  """
+  (assert (number? today-day) "expected today-day to be a number")
+  (let [day (get i :day)]
+    (and (>= today-day day)
+         (> 7 (- today-day day)))))
+
+(test (valid-day? @{:day 70} 70) true)
+(test (valid-day? @{:day 75} 70) false)
+(test (valid-day? @{:day 65} 70) true)
+(test (valid-day? @{:day 60} 70) false)
+(test (valid-day? @{:day 63} 70) false)
+
 # Broken at year boundaries
-# Is based on :year-day
-(defn group-by-days [items]
-  (defn add-day-since-today [i]
-    (as-> (get i :end) _
-          (time/parse "%Y%m%dT%H%M%S%z" _ "EUROPE/OSLO")
-          (os/date _ :local)
-          (get _ :year-day)
-          (merge {:day _} i)))
-  (as-> (map add-day-since-today items) _
+(defn group-by-days [items &opt today-day]
+  """
+  Expects items with :day
+  """
+  (default today-day (-> (os/date (os/time) :local)
+                         (get :year-day)))
+  (as-> (filter |(valid-day? $ today-day) items) _
         (partition-by |(get $ :day) _)
+        (add-missing-days today-day _)
         (sorted-by |(-> (get $ 0)
                         (get :day)) _)))
 
+
+(test
+  (let [today-day 70]
+    (protect (group-by-days @[{:day (- today-day 1) :name "org"}
+                              {:day (- today-day 2) :name "another org"}
+                              {:day (- today-day 2) :name "org"}
+                              {:day (- today-day 6) :name "org"}] today-day)))
+  [true
+   @[@[{:day 64 :name "org"}]
+     @[{:day 65}]
+     @[{:day 66}]
+     @[{:day 67}]
+     @[{:day 68 :name "another org"}
+       {:day 68 :name "org"}]
+     @[{:day 69 :name "org"}]
+     @[{:day 70}]]])
+
+(test # All days are present in input
+  (let [today-day 70]
+    (protect (group-by-days @[{:day (- today-day 0) :name "org"}
+                              {:day (- today-day 1) :name "another org"}
+                              {:day (- today-day 2) :name "another org"}
+                              {:day (- today-day 3) :name "org"}
+                              {:day (- today-day 4) :name "org"}
+                              {:day (- today-day 5) :name "org"}
+                              {:day (- today-day 6) :name "org"}] today-day)))
+  [true
+   @[@[{:day 64 :name "org"}]
+     @[{:day 65 :name "org"}]
+     @[{:day 66 :name "org"}]
+     @[{:day 67 :name "org"}]
+     @[{:day 68 :name "another org"}]
+     @[{:day 69 :name "another org"}]
+     @[{:day 70 :name "org"}]]])
+
+(test # Gets more than 7 days as input: should disregard the days/items that are too old
+  (let [today-day 77]
+    (protect (group-by-days @[{:day (- today-day 0) :name "org"}
+                              {:day (- today-day 1) :name "another org"}
+                              {:day (- today-day 2) :name "another org"}
+                              {:day (- today-day 5) :name "org"}
+                              {:day (- today-day 7) :name "org"}
+                              {:day (- today-day 10) :name "org"} # too old
+                              {:day (- today-day 5) :name "org"}
+                              {:day (- today-day 6) :name "org"}] today-day)))
+  [true
+   @[@[{:day 71 :name "org"}]
+     @[{:day 72 :name "org"}
+       {:day 72 :name "org"}]
+     @[{:day 73}]
+     @[{:day 74}]
+     @[{:day 75 :name "another org"}]
+     @[{:day 76 :name "another org"}]
+     @[{:day 77 :name "org"}]]])
+
+
 (defn get-last-seven-days []
-  (->> ($< task end.after:-7d status:completed rc.context=none export)
-       (json/decode)
-       (map keyword-keys)
-       (group-by-days)))
+  (let [res (->> ($< task end.after:-7d status:completed rc.context=none export)
+                 (json/decode)
+                 (map keyword-keys)
+                 (map add-day-from-end)
+                 (group-by-days))]
+    (assert (= 7 (length res)) (string "expected 7 days, got " (length res) " days"))
+    res))
+
+(comment
+  # Should always have a length of 7 days...
+  (get-last-seven-days)
+
+  (let [res (->> ($< task end.after:-7d status:completed rc.context=none export)
+                 (json/decode)
+                 (map keyword-keys))]))
 
 (defn remove-duplicate [acc x]
   (if (= (last acc) x) acc
