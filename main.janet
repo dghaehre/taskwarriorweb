@@ -256,7 +256,7 @@
         (navbar)
         [:a {:href (string "/delete/" uuid)
               :role "button"
-              :style "float: right"
+              :style "padding: 8px; margin-bottom: 20px;"
               :class "secondary"} "delete"]
         [:h4 (v :description)]
         [:ul
