@@ -33,7 +33,7 @@
 (route :get "/get-content" :content)
 (route :get "/complete/:uuid" :complete)
 (route :get "/modify/:uuid" :modify)
-(route :get "/delete/:uuid" :delete)
+(route :delete "/delete/:uuid" :delete)
 (route :post "/modify/:uuid" :modify-post)
 (route :post "/add" :add)
 (route :get "/error" :error-page)
@@ -143,9 +143,10 @@
                                   [:li (string "end: " (display-time end))])]
                               (when allow-modification
                                 [:footer
-                                   [:a {:href (string "/delete/" uuid)
-                                        :role "button"
-                                        :class "secondary"} "delete"]
+                                   [:button {:hx-delete (string "/delete/" uuid)
+                                             :style "width: 80px; float: left;"
+                                             :hx-confirm "Are you sure?"
+                                             :class "secondary"} "delete"]
                                    [:a {:href (string "/modify/" uuid)
                                         :role "button"
                                         :class "primary"} "modify"]
@@ -254,10 +255,6 @@
     (if (not success) (redirect-to :error-page {:? {:reason v}})
       [:main {:class "container"}
         (navbar)
-        [:a {:href (string "/delete/" uuid)
-              :role "button"
-              :style "padding: 8px; margin-bottom: 20px;"
-              :class "secondary"} "delete"]
         [:h4 (v :description)]
         [:ul
           [:li (string "urgency: " (math/floor (v :urgency)))]
@@ -268,6 +265,10 @@
           (date-picker "scheduled" (v :scheduled))
           (date-picker "due" (v :due))
           [:br]
+          [:button {:hx-delete (string "/delete/" uuid)
+                    :hx-confirm "Are you sure?"
+                    :style "width: 100px;"
+                    :class "secondary"} "delete"]
           (custom-input-button id)
           [:br]
           [:button {:type "submit"} "Modify"]]])))
@@ -276,8 +277,8 @@
   (let [uuid        (get-in request [:params :uuid])
         [success v] (protect (task/delete uuid))]
     (if success
-      (redirect-to :home)
-      (redirect-to :error-page {:? {:reason v}}))))
+      (htmx-redirect :home)
+      (htmx-redirect :error-page {:? {:reason v}}))))
 
 
 (defn complete [request]
