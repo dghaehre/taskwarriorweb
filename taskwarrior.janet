@@ -79,6 +79,22 @@
     (assert (= 7 (length res)) (string "expected 7 days, got " (length res) " days"))
     res))
 
+(defn get-notify-items []
+  "Get all items that have notifcations over time"
+  (let [output ($< task status.not:completed status.not:deleted rc.context=none notify.before:now export)
+        json (json/decode output)]
+    (map keyword-keys json)))
+
+(defn remove-notify-tag [uuid]
+  "Remove notify from item"
+  (assert (string? uuid) "expected uuid as string")
+  (modify-custom-string uuid "notify:"))
+
+(comment
+  (let [uid (-> (get-notify-items)
+                (get 0)
+                (get :uuid))]))
+
 (defn add-day-from-end [i]
   """
   Add :day that is amount of days since today

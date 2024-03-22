@@ -5,6 +5,7 @@
 (import ./chart :as chart)
 (import ./taskwarrior :as task)
 (import ./git :as git)
+(import ./notify :as notify)
 (use time)
 
 # (os/time) since last time we synced with the task-server
@@ -390,12 +391,37 @@
   (task/sync)
   (set last-synced (os/time)))
 
+(defn notify-job []
+  "A background job that notifies the user about tasks that have the notify tag.
+
+  To add support for this, include the following in your .taskrc file:
+  ```
+  uda.notify.label=notify
+  uda.notify.type=date
+  ```
+
+  To receive notifications you need to go to ntfy.sh and subscribe to a topic and update the NOTIFY_TOPIC environment variable.
+  "
+  (print "Checking for notifications")
+  (let [items (task/get-notify-items)]
+    (loop [item :in items]
+      (print "notifying: " (item :description))
+      (notify/push item)
+      (task/remove-notify-tag (get item :uuid)))))
+
 # Server
 (defn main [& args]
   (try
     (let [port (get args 1 (os/getenv "PORT" "9001"))
-          host (get args 2 (os/getenv "HOST" "localhost"))]
+          host (get args 2 (os/getenv "HOST" "localhost"))
+          notify-topic (os/getenv "NOTIFY_TOPIC")]
       (background-job sync-job 60)
+      (if (not (nil? notify-topic))
+        (do
+          (print "Starting notify job")
+          (setdyn :notify-topic notify-topic)
+          (background-job notify-job (* 60 3)))
+        (print "No notify topic set. No notifications will be sent."))
       (print "Starting server on " host ":" port)
       (server app port host))
     ([err _] (print "uncaught error: " err))))
