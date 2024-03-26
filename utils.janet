@@ -79,11 +79,12 @@
   ~(try ,body ([_] nil)))
 
 # Should never return error!
-(defn background-job [f seconds]
+(defn background-job [f seconds &opt deadline]
+  (default deadline 3)
   (defn job []
     (forever
       (defer (ev/sleep seconds)
-        (silent (f)))))
+        (silent (ev/with-deadline deadline (f))))))
   (ev/go job))
 
 
