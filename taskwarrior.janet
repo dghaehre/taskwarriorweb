@@ -122,6 +122,8 @@
 (test (valid-day? @{:day 65} 70) true)
 (test (valid-day? @{:day 60} 70) false)
 (test (valid-day? @{:day 63} 70) false)
+(test (valid-day? @{:day 88} 94) true)
+
 
 # Broken at year boundaries
 (defn group-by-days [items &opt today-day]
@@ -131,6 +133,7 @@
   (default today-day (-> (os/date (os/time) :local)
                          (get :year-day)))
   (as-> (filter |(valid-day? $ today-day) items) _
+        (sorted-by |(get $ :day) _)
         (partition-by |(get $ :day) _)
         (add-missing-days today-day _)
         (sorted-by |(-> (get $ 0)
@@ -190,6 +193,29 @@
      @[{:day 75 :name "another org"}]
      @[{:day 76 :name "another org"}]
      @[{:day 77 :name "org"}]]])
+
+(test # Gets 7 days but not in order
+  (let [today-day 77]
+    (protect (group-by-days @[{:day (- today-day 0) :name "org"}
+                              {:day (- today-day 1) :name "another org"}
+                              {:day (- today-day 2) :name "another org"}
+                              {:day (- today-day 1) :name "org"}
+                              {:day (- today-day 3) :name "org"}
+                              {:day (- today-day 0) :name "org"}
+                              {:day (- today-day 5) :name "org"}
+                              {:day (- today-day 6) :name "org"}
+                              {:day (- today-day 6) :name "org"}] today-day)))
+  [true
+   @[@[{:day 71 :name "org"}
+       {:day 71 :name "org"}]
+     @[{:day 72 :name "org"}]
+     @[{:day 73}]
+     @[{:day 74 :name "org"}]
+     @[{:day 75 :name "another org"}]
+     @[{:day 76 :name "another org"}
+       {:day 76 :name "org"}]
+     @[{:day 77 :name "org"}
+       {:day 77 :name "org"}]]])
 
 
 (defn get-last-seven-days []
