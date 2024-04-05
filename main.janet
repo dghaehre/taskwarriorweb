@@ -415,7 +415,7 @@
     (let [port (get args 1 (os/getenv "PORT" "9001"))
           host (get args 2 (os/getenv "HOST" "localhost"))
           notify-topic (os/getenv "NOTIFY_TOPIC")]
-      (background-job sync-job 60)
+      (background-job sync-job 60 1)
       (if (not (nil? notify-topic))
         (do
           (print "Starting notify job")
