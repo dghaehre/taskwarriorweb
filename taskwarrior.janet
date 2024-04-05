@@ -151,8 +151,8 @@
      @[{:day 65}]
      @[{:day 66}]
      @[{:day 67}]
-     @[{:day 68 :name "another org"}
-       {:day 68 :name "org"}]
+     @[{:day 68 :name "org"}
+       {:day 68 :name "another org"}]
      @[{:day 69 :name "org"}]
      @[{:day 70}]]])
 
