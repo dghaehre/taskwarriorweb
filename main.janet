@@ -8,9 +8,6 @@
 (import ./notify :as notify)
 (use time)
 
-# (os/time) since last time we synced with the task-server
-(var last-synced nil)
-
 # Layout
 (defn app-layout [{:body body :request request}]
   (text/html
@@ -187,16 +184,11 @@
       [:tbody rows]]))
 
 (defn navbar []
-  (let [synced (if (nil? last-synced) ""
-                 (let [seconds (- (os/time) last-synced)]
-                   (string "synced " seconds "s ago")))]
-    [:nav
-     [:ul
-      [:li {:style "color: grey; padding-top: 0px; font-size: 11px;" } [:small synced]]]
-     [:ul
-      [:li [:a {:href "/completed" :class "secondary"} "completed"]]
-      [:li [:a {:href "/search" :class "secondary"} "search"]]
-      [:li [:a {:href "/" :class "secondary"} "home"]]]]))
+  [:nav
+   [:ul
+    [:li [:a {:href "/completed" :class "secondary"} "completed"]]
+    [:li [:a {:href "/search" :class "secondary"} "search"]]
+    [:li [:a {:href "/" :class "secondary"} "home"]]]])
 
 (defn group-by-project [items]
   (group-by (fn [item] (get-root-project item)) items))
@@ -233,9 +225,7 @@
         scheduled     (get-in request [:body :scheduled])
         project       (get-in request [:body :project])
         [success err] (protect (cond
-                                 (not (nil? modify-string)) (do
-                                                              (task/modify-custom-string uuid modify-string)
-                                                              (task/sync))
+                                 (not (nil? modify-string)) (task/modify-custom-string uuid modify-string)
                                  (task/modify uuid scheduled due project)))]
     (if success
       (url-redirect referer) # Redirect back to where you came from
@@ -386,13 +376,8 @@
              (not-found)
              (logger)))
 
-(defn sync-job []
-  "A background job that syncs with the task-server every minute"
-  (task/sync)
-  (set last-synced (os/time)))
-
-(defn notify-job []
-  "A background job that notifies the user about tasks that have the notify tag.
+(defn notify []
+  "Notifies the user about tasks that have the notify tag.
 
   To add support for this, include the following in your .taskrc file:
   ```
@@ -407,23 +392,32 @@
     (loop [item :in items]
       (print "notifying: " (item :description))
       (notify/push item)
-      (task/remove-notify-tag (get item :uuid)))))
+      (task/remove-notify-tag (get item :uuid)))
+    (print "Notications done")))
+
 
 # Server
 (defn main [& args]
-  (try
-    (let [port (get args 1 (os/getenv "PORT" "9001"))
-          host (get args 2 (os/getenv "HOST" "localhost"))
-          notify-topic (os/getenv "NOTIFY_TOPIC")]
-      (background-job sync-job 60 1)
-      (if (not (nil? notify-topic))
-        (do
-          (print "Starting notify job")
-          (setdyn :notify-topic notify-topic)
-          (background-job notify-job (* 60 3)))
-        (print "No notify topic set. No notifications will be sent."))
-      (print "Starting server on " host ":" port)
-      (server app port host))
-    ([err _] (print "uncaught error: " err))))
+
+  (cond
+
+    # Sync
+    (= (last args) "--sync")
+    (task/sync)
+
+    # Notify
+    (= (last args) "--notify")
+    (if (let [nt (os/getenv "NOTIFY_TOPIC")]
+          (or (nil? nt) (= "" nt)))
+      (print "No notify topic set in env variable. Cannot send notifcations")
+      (notify))
+
+    # Run server
+    (try
+      (let [port (get args 1 (os/getenv "PORT" "9001"))
+            host (get args 2 (os/getenv "HOST" "localhost"))]
+        (print "Starting server on " host ":" port)
+        (server app port host))
+      ([err _] (print "uncaught error: " err)))))
 
    
