@@ -13,21 +13,21 @@
 
 (defn get-today []
   (let [output ($< task "(scheduled.before:eod or due.before:tom+48h)" export ready)
-        json (json/decode output)]
-    (map keyword-keys json)))
+        json-output (json/decode output)]
+    (map keyword-keys json-output)))
 
 (defn get-ready []
   (let [output ($< task proj.not:arch export ready)
-        json (json/decode output)]
-    (map keyword-keys json)))
+        json-output (json/decode output)]
+    (map keyword-keys json-output)))
 
 (defn search [s &opt project]
   (default project "")
   (let [project-search (if (= "" project) ""
                          (string "pro:" project))
         output ($< task status:pending rc.context=none ,s ,project-search export)
-        json (json/decode output)]
-    (map keyword-keys json)))
+        json-output (json/decode output)]
+    (map keyword-keys json-output)))
 
 (comment
   (search "pro:arch test"))
@@ -37,19 +37,22 @@
 
 (defn get-inbox []
   (let [output ($< task status:pending rc.context=none pro: export)
-        json (json/decode output)]
-    (map keyword-keys json)))
+        json-output (json/decode output)]
+    (map keyword-keys json-output)))
 
 (defn get-done-today []
   (let [output ($< task status:completed rc.context=none end.after:tod export)
-        json (json/decode output)]
-    (map keyword-keys json)))
+        json-output (json/decode output)]
+    (map keyword-keys json-output)))
+
+(comment
+  (get-done-today))
 
 (defn get-item [uuid]
   (let [[success output] (protect ($< task ,uuid export))]
     (if (not success) (error (string "no item found: " output))
-      (let [json (json/decode output)
-            list (map keyword-keys json)]
+      (let [json-output (json/decode output)
+            list (map keyword-keys json-output)]
         (if (empty? list) (error "no item found")
           (get list 0))))))
 
@@ -87,8 +90,8 @@
 (defn get-notify-items []
   "Get all items that have notifcations over time"
   (let [output ($< task status.not:completed status.not:deleted rc.context=none notify.before:now export)
-        json (json/decode output)]
-    (map keyword-keys json)))
+        json-output (json/decode output)]
+    (map keyword-keys json-output)))
 
 (defn remove-notify-tag [uuid]
   "Remove notify from item"
