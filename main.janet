@@ -28,6 +28,7 @@
 
 # Routes
 (route :get "/" :home)
+(route :get "/ready" :ready)
 (route :get "/get-content" :content)
 (route :get "/complete/:uuid" :complete)
 (route :get "/modify/:uuid" :modify)
@@ -185,13 +186,24 @@
 
 (defn navbar []
   [:nav
+   [:ul]
    [:ul
     [:li [:a {:href "/completed" :class "secondary"} "completed"]]
     [:li [:a {:href "/search" :class "secondary"} "search"]]
-    [:li [:a {:href "/" :class "secondary"} "home"]]]])
+    [:li [:a {:href "/ready" :class "secondary"} "ready"]]
+    [:li [:a {:href "/" :class "secondary"} "today"]]]])
 
 (defn group-by-project [items]
   (group-by (fn [item] (get-root-project item)) items))
+
+(defn show-ready-tasks []
+  (let [ready  (task/get-ready)
+        grouped (->> (group-by-project ready)
+                     (map |(sort-urgency $)))]
+    [:div {:id "content"}
+      [:h4 (string "Ready: " (length ready))]
+      (seq [list :in grouped]
+        (to-table-mobile list {:show-header false}))]))
 
 (defn show-tasks [&opt git-status]
   (default git-status {:load? true})
@@ -360,6 +372,12 @@
   [:main {:class "container"}
     (navbar)
     (show-tasks)
+    (add-modal)])
+
+(defn ready [request]
+  [:main {:class "container"}
+    (navbar)
+    (show-ready-tasks)
     (add-modal)])
 
 # Middleware

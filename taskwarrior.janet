@@ -16,6 +16,11 @@
         json (json/decode output)]
     (map keyword-keys json)))
 
+(defn get-ready []
+  (let [output ($< task proj.not:arch export ready)
+        json (json/decode output)]
+    (map keyword-keys json)))
+
 (defn search [s &opt project]
   (default project "")
   (let [project-search (if (= "" project) ""
