@@ -41,7 +41,7 @@
     (map keyword-keys json-output)))
 
 (defn get-done-today []
-  (let [output ($< task status:completed rc.context=none end.after:tod export)
+  (let [output ($< task "status:completed rc.context=none end.after:tod" export)
         json-output (json/decode output)]
     (map keyword-keys json-output)))
 
