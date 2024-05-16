@@ -376,7 +376,7 @@
              (not-found)
              (logger)))
 
-(defn notify []
+(defn notify [topic]
   "Notifies the user about tasks that have the notify tag.
 
   To add support for this, include the following in your .taskrc file:
@@ -388,6 +388,7 @@
   To receive notifications you need to go to ntfy.sh and subscribe to a topic and update the NOTIFY_TOPIC environment variable.
   "
   (print "Checking for notifications")
+  (setdyn :notify-topic topic)
   (let [items (task/get-notify-items)]
     (loop [item :in items]
       (print "notifying: " (item :description))
@@ -410,7 +411,7 @@
     (if (let [nt (os/getenv "NOTIFY_TOPIC")]
           (or (nil? nt) (= "" nt)))
       (print "No notify topic set in env variable. Cannot send notifcations")
-      (notify))
+      (notify (os/getenv "NOTIFY_TOPIC")))
 
     # Run server
     (try
