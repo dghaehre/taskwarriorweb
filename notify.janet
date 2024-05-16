@@ -4,11 +4,14 @@
   (let [desc    (item :description)
         project (item :project)
         topic   (dyn :notify-topic)
-        header (string "Title: " project)]
+        header (cond
+                 (string? project) (string "Title: " project)
+                 "Title: Inbox")]
     (assert (string? desc))
-    (assert (string? project))
     (assert (string? topic))
     ($ curl -X POST -d ,desc --header ,header ,(string "https://ntfy.sh/" topic))))
 
 (comment
-  (push {:description "test" :project "test"}))
+  (do
+    (setdyn :notify-topic "test")
+    (push {:description "test"})))
