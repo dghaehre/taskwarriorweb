@@ -17,7 +17,7 @@
     (map keyword-keys json-output)))
 
 (defn get-ready []
-  (let [output ($< task proj.not:arch export ready)
+  (let [output ($< task proj.not:arch proj.not: export ready)
         json-output (json/decode output)]
     (map keyword-keys json-output)))
 
